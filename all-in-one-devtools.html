@@ -1,0 +1,2218 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevTools - Developer Tool Collection</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://unpkg.com/crypto-js@4.2.0/crypto-js.js"></script>
+    <script src="https://unpkg.com/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+    <script src="https://unpkg.com/diff@5.1.0/dist/diff.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-bg: #0d1117;
+            --secondary-bg: #161b22;
+            --tertiary-bg: #21262d;
+            --border-color: #30363d;
+            --text-primary: #f0f6fc;
+            --text-secondary: #8b949e;
+            --accent-blue: #58a6ff;
+            --accent-green: #56d364;
+            --accent-purple: #a5a6ff;
+            --accent-orange: #ffa657;
+            --accent-red: #f85149;
+            --hover-bg: #30363d;
+            --font-mono: 'JetBrains Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+        }
+
+        body {
+            font-family: var(--font-mono);
+            background: var(--primary-bg);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .app {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 220px;
+            background: var(--secondary-bg);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .logo {
+            padding: 24px 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .logo h1 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--accent-blue);
+            margin-bottom: 6px;
+        }
+
+        .logo p {
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        .nav-menu {
+            flex: 1;
+            padding: 20px 12px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            margin-bottom: 6px;
+            border-radius: 6px;
+            text-decoration: none;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .nav-item:hover {
+            background: var(--hover-bg);
+            color: var(--text-primary);
+            transform: translateX(4px);
+        }
+
+        .nav-item.active {
+            background: rgba(88, 166, 255, 0.1);
+            color: var(--accent-blue);
+            border-left: 3px solid var(--accent-blue);
+        }
+
+        .nav-item .icon {
+            font-size: 16px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .nav-item .text {
+            font-size: 13px;
+        }
+
+        .footer {
+            padding: 16px;
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .footer p {
+            color: var(--text-secondary);
+            font-size: 11px;
+            margin-bottom: 4px;
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: 220px;
+            padding: 32px;
+            background: var(--primary-bg);
+        }
+
+        .page-header {
+            margin-bottom: 32px;
+        }
+
+        .page-header h2 {
+            font-size: 32px;
+            color: var(--accent-blue);
+            margin-bottom: 8px;
+        }
+
+        .page-header p {
+            color: var(--text-secondary);
+            font-size: 16px;
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 24px;
+        }
+
+        .tool-card {
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            transition: all 0.2s ease;
+        }
+
+        .tool-card:hover {
+            border-color: var(--accent-blue);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(88, 166, 255, 0.1);
+        }
+
+        .tool-card h3 {
+            color: var(--accent-green);
+            margin-bottom: 20px;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tool-card-compact {
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            transition: all 0.2s ease;
+        }
+
+        .tool-card-compact:hover {
+            border-color: var(--accent-purple);
+            transform: translateY(-1px);
+        }
+
+        .tool-card-compact h4 {
+            color: var(--accent-purple);
+            margin-bottom: 16px;
+            font-size: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        input,
+        textarea,
+        select {
+            background: var(--tertiary-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 12px;
+            border-radius: 6px;
+            font-family: var(--font-mono);
+            font-size: 14px;
+            width: 100%;
+            transition: all 0.2s ease;
+        }
+
+        /* Date time input special styles */
+        input[type="datetime-local"] {
+            background: var(--secondary-bg);
+            border: 2px solid var(--accent-blue);
+            color: var(--text-primary);
+        }
+
+        input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+            background-color: var(--accent-blue);
+            border-radius: 3px;
+            cursor: pointer;
+            filter: invert(1);
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.1);
+        }
+
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        button {
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-family: var(--font-mono);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-right: 8px;
+            margin-bottom: 8px;
+        }
+
+        button:hover {
+            background: #1f6feb;
+            transform: translateY(-1px);
+        }
+
+        button.secondary {
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+        button.secondary:hover {
+            background: var(--hover-bg);
+        }
+
+        button.success {
+            background: var(--accent-green);
+        }
+
+        button.success:hover {
+            background: #46954a;
+        }
+
+        button.danger {
+            background: var(--accent-red);
+        }
+
+        button.danger:hover {
+            background: #da3633;
+        }
+
+        .result-box {
+            background: var(--tertiary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 16px;
+            margin-top: 16px;
+            font-family: var(--font-mono);
+            font-size: 14px;
+            word-break: break-all;
+            white-space: pre-wrap;
+            position: relative;
+        }
+
+        .result-box-with-copy {
+            padding-right: 60px;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 12px;
+            cursor: pointer;
+            opacity: 0.8;
+            transition: all 0.2s ease;
+        }
+
+        .copy-btn:hover {
+            opacity: 1;
+            background: #1f6feb;
+            transform: scale(1.05);
+        }
+
+        .copy-btn:active {
+            transform: scale(0.95);
+        }
+
+        .current-time {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--tertiary-bg);
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .time-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--accent-green);
+            cursor: pointer;
+        }
+
+        .time-value:hover {
+            color: var(--accent-blue);
+        }
+
+        .tab-buttons,
+        .encoder-tabs {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0;
+        }
+
+        .tab-button,
+        .encoder-tab {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 12px 0;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 16px;
+            font-weight: 500;
+            font-family: var(--font-mono);
+        }
+
+        .tab-button.active,
+        .encoder-tab.active {
+            color: var(--accent-blue);
+            border-bottom-color: var(--accent-blue);
+        }
+
+        .tab-button:hover:not(.active),
+        .encoder-tab:hover:not(.active) {
+            color: var(--text-primary);
+        }
+
+        .encoder-content {
+            min-height: 400px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .generator-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+        }
+
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .diff-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .diff-result {
+            background: var(--tertiary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 16px;
+            font-family: var(--font-mono);
+            font-size: 14px;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .diff-result-with-copy {
+            padding-right: 60px;
+        }
+
+        .diff-stats {
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 16px;
+            display: flex;
+            gap: 24px;
+            font-size: 14px;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stat-added {
+            color: var(--accent-green);
+        }
+
+        .stat-removed {
+            color: var(--accent-red);
+        }
+
+        .stat-unchanged {
+            color: var(--text-secondary);
+        }
+
+        .diff-added {
+            background-color: rgba(86, 211, 100, 0.2);
+            color: var(--accent-green);
+        }
+
+        .diff-removed {
+            background-color: rgba(248, 81, 73, 0.2);
+            color: var(--accent-red);
+        }
+
+        .generator-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+        }
+
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .encoder-tabs {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0;
+        }
+
+        .encoder-tab {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 12px 0;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .encoder-tab.active {
+            color: var(--accent-blue);
+            border-bottom-color: var(--accent-blue);
+        }
+
+        .encoder-tab:hover:not(.active) {
+            color: var(--text-primary);
+        }
+
+        .encoder-content {
+            min-height: 400px;
+        }
+
+        /* Copy button state styles */
+        .copy-btn.copied {
+            background: var(--accent-green) !important;
+            transform: scale(0.95);
+        }
+
+        .copy-btn.copied::after {
+            content: ' ✓';
+        }
+
+        /* Tree Viewer styles */
+        .view-toggle {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .view-toggle button {
+            padding: 6px 12px;
+            font-size: 12px;
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        .view-toggle button.active {
+            background: var(--accent-blue);
+            color: white;
+            border-color: var(--accent-blue);
+        }
+
+        .tree-viewer {
+            background: var(--tertiary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 16px;
+            margin-top: 16px;
+            font-family: var(--font-mono);
+            font-size: 14px;
+            max-height: 400px;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .tree-node {
+            margin-left: 20px;
+            position: relative;
+        }
+
+        .tree-node::before {
+            content: '';
+            position: absolute;
+            left: -12px;
+            top: 8px;
+            width: 8px;
+            height: 1px;
+            background: var(--border-color);
+        }
+
+        .tree-node:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            left: -16px;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background: var(--border-color);
+        }
+
+        .tree-key {
+            color: var(--accent-blue);
+            font-weight: 600;
+        }
+
+        .tree-value {
+            color: var(--text-primary);
+            margin-left: 8px;
+        }
+
+        .tree-value.string {
+            color: var(--accent-green);
+        }
+
+        .tree-value.number {
+            color: var(--accent-orange);
+        }
+
+        .tree-value.boolean {
+            color: var(--accent-purple);
+        }
+
+        .tree-value.null {
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        .tree-toggle {
+            background: none;
+            border: none;
+            color: var(--accent-blue);
+            cursor: pointer;
+            padding: 0;
+            margin: 0 4px 0 0;
+            font-size: 12px;
+            line-height: 1;
+        }
+
+        .tree-toggle:hover {
+            color: var(--accent-green);
+        }
+
+        .tree-collapsed .tree-children {
+            display: none;
+        }
+
+        /* Search functionality styles */
+        .search-container {
+            margin: 16px 0;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: var(--tertiary-bg);
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+            font-size: 13px;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.1);
+            background: var(--secondary-bg);
+        }
+
+        .search-input.has-results {
+            border-color: var(--accent-green);
+            box-shadow: 0 0 0 2px rgba(86, 211, 100, 0.1);
+        }
+
+        .search-input.no-results {
+            border-color: var(--accent-red);
+            box-shadow: 0 0 0 2px rgba(248, 81, 73, 0.1);
+        }
+
+        .search-stats {
+            font-size: 13px;
+            color: var(--accent-green);
+            white-space: nowrap;
+            background: var(--secondary-bg);
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            font-weight: 600;
+            min-width: 50px;
+            text-align: center;
+        }
+
+        .search-stats.no-results {
+            color: var(--accent-red);
+        }
+
+        .search-navigation {
+            display: flex;
+            gap: 4px;
+        }
+
+        .search-nav-btn {
+            padding: 6px 10px;
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.2s ease;
+            min-width: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .search-nav-btn:hover:not(:disabled) {
+            background: var(--accent-blue);
+            color: white;
+            border-color: var(--accent-blue);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(88, 166, 255, 0.3);
+        }
+
+        .search-nav-btn:active:not(:disabled) {
+            transform: translateY(0);
+            box-shadow: 0 1px 2px rgba(88, 166, 255, 0.2);
+        }
+
+        .search-nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            background: var(--tertiary-bg);
+        }
+
+        /* Highlight styles - Enhanced version */
+        .search-highlight {
+            background: linear-gradient(135deg, #ffeb3b, #ffc107);
+            color: #1a1a1a;
+            border-radius: 4px;
+            padding: 2px 4px;
+            margin: 0 1px;
+            font-weight: 600;
+            box-shadow: 0 1px 3px rgba(255, 193, 7, 0.4);
+            border: 1px solid rgba(255, 193, 7, 0.6);
+            animation: searchPulse 2s ease-in-out;
+        }
+
+        .search-highlight.current {
+            background: linear-gradient(135deg, #ff9800, #ff5722);
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 2px 8px rgba(255, 152, 0, 0.6);
+            border: 2px solid #ff9800;
+            animation: currentMatchPulse 1.5s ease-in-out infinite alternate;
+            transform: scale(1.05);
+        }
+
+        @keyframes searchPulse {
+            0% {
+                background: var(--accent-blue);
+                transform: scale(1.1);
+            }
+
+            100% {
+                background: linear-gradient(135deg, #ffeb3b, #ffc107);
+                transform: scale(1);
+            }
+        }
+
+        @keyframes currentMatchPulse {
+            0% {
+                box-shadow: 0 2px 8px rgba(255, 152, 0, 0.6);
+                border-color: #ff9800;
+            }
+
+            100% {
+                box-shadow: 0 4px 16px rgba(255, 152, 0, 0.9);
+                border-color: #ff5722;
+            }
+        }
+
+        /* Tree view highlight styles - Enhanced version */
+        .tree-key.search-highlight,
+        .tree-value.search-highlight {
+            background: linear-gradient(135deg, #ffeb3b, #ffc107) !important;
+            color: #1a1a1a !important;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            font-weight: 600;
+            box-shadow: 0 1px 4px rgba(255, 193, 7, 0.5);
+            border: 1px solid rgba(255, 193, 7, 0.7);
+            position: relative;
+            animation: searchPulse 2s ease-in-out;
+        }
+
+        .tree-key.search-highlight.current,
+        .tree-value.search-highlight.current {
+            background: linear-gradient(135deg, #ff9800, #ff5722) !important;
+            color: white !important;
+            font-weight: bold;
+            box-shadow: 0 3px 12px rgba(255, 152, 0, 0.7);
+            border: 2px solid #ff9800;
+            animation: currentMatchPulse 1.5s ease-in-out infinite alternate;
+            transform: scale(1.08);
+            z-index: 10;
+        }
+
+        /* Add blinking border for search matches */
+        .tree-key.search-highlight::before,
+        .tree-value.search-highlight::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, transparent, rgba(255, 193, 7, 0.3), transparent);
+            border-radius: 6px;
+            z-index: -1;
+            animation: borderGlow 3s ease-in-out infinite;
+        }
+
+        .tree-key.search-highlight.current::before,
+        .tree-value.search-highlight.current::before {
+            background: linear-gradient(45deg, transparent, rgba(255, 152, 0, 0.6), transparent);
+            animation: currentBorderGlow 1.5s ease-in-out infinite;
+        }
+
+        @keyframes borderGlow {
+
+            0%,
+            100% {
+                opacity: 0.3;
+            }
+
+            50% {
+                opacity: 0.8;
+            }
+        }
+
+        @keyframes currentBorderGlow {
+
+            0%,
+            100% {
+                opacity: 0.6;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        /* Text view highlight enhancement */
+        .result-box .search-highlight {
+            display: inline-block;
+            background: linear-gradient(135deg, #ffeb3b, #ffc107);
+            color: #1a1a1a;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-weight: 600;
+            box-shadow: 0 1px 3px rgba(255, 193, 7, 0.4);
+            border: 1px solid rgba(255, 193, 7, 0.6);
+            position: relative;
+        }
+
+        .result-box .search-highlight.current {
+            background: linear-gradient(135deg, #ff9800, #ff5722);
+            color: white;
+            box-shadow: 0 2px 8px rgba(255, 152, 0, 0.6);
+            border: 2px solid #ff9800;
+            animation: currentMatchPulse 1.5s ease-in-out infinite;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--secondary-bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--hover-bg);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <div class="app">
+            <!-- Sidebar -->
+            <nav class="sidebar">
+                <div class="logo">
+                    <h1>⚡ DevTools</h1>
+                    <p>Developer Tool Collection</p>
+                    <div
+                        style="margin-top: 8px; padding: 6px 8px; background: rgba(86, 211, 100, 0.15); border-radius: 4px; border: 1px solid var(--accent-green);">
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <span style="color: var(--accent-green); font-size: 12px;">🔒</span>
+                            <span style="color: var(--accent-green); font-size: 11px; font-weight: 600;">100%
+                                Local Processing</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="nav-menu">
+                    <div v-for="item in menuItems" :key="item.id" class="nav-item"
+                        :class="{ active: currentTab === item.id }" @click="setCurrentTab(item.id)">
+                        <span class="icon">{{ item.icon }}</span>
+                        <span class="text">{{ item.name }}</span>
+                    </div>
+                </div>
+
+                <div class="footer">
+                    <p>v1.0.0</p>
+                    <p>🚀 Pure HTML Implementation</p>
+                    <p style="color: var(--accent-green); font-weight: 600;">🔒 100% Local Processing</p>
+                    <p style="color: var(--accent-green); font-size: 10px;">All data processed locally in browser</p>
+                </div>
+            </nav>
+
+            <!-- Main Content Area -->
+            <main class="main-content">
+
+                <!-- Time Conversion -->
+                <div v-show="currentTab === 'time'" class="time-converter">
+                    <div class="page-header">
+                        <h2>🕐 Time Conversion</h2>
+                        <p>Timestamp and local time conversion tool</p>
+                    </div>
+
+                    <div class="tools-grid">
+                        <div class="tool-card">
+                            <h3>📅 Current Timestamp</h3>
+                            <div class="current-time">
+                                <span>Unix Timestamp (seconds):</span>
+                                <span class="time-value" @click="copyToClipboard(currentTimestamp, $event)">{{
+                                    currentTimestamp
+                                    }}</span>
+                            </div>
+                            <div class="current-time">
+                                <span>Unix Timestamp (milliseconds):</span>
+                                <span class="time-value" @click="copyToClipboard(currentTimestampMs, $event)">{{
+                                    currentTimestampMs }}</span>
+                            </div>
+                            <div class="current-time">
+                                <span>Current Time:</span>
+                                <span class="time-value">{{ currentTime }}</span>
+                            </div>
+                        </div>
+
+                        <div class="tool-card">
+                            <h3>⏰ Timestamp to Local Time</h3>
+                            <div class="form-group">
+                                <label>Timestamp:</label>
+                                <input v-model="timestampInput" placeholder="Enter timestamp (seconds or milliseconds)"
+                                    @input="convertTimestamp">
+                            </div>
+                            <div class="form-group">
+                                <label>Timezone:</label>
+                                <select v-model="selectedTimezone" @change="convertTimestamp">
+                                    <option value="Asia/Hong_Kong">Hong Kong (GMT+8)</option>
+                                    <option value="Asia/Shanghai">Shanghai (GMT+8)</option>
+                                    <option value="Asia/Tokyo">Tokyo (GMT+9)</option>
+                                    <option value="America/New_York">New York (GMT-5/-4)</option>
+                                    <option value="Europe/London">London (GMT+0/+1)</option>
+                                    <option value="UTC">UTC (GMT+0)</option>
+                                </select>
+                            </div>
+                            <div v-if="convertedTime" class="result-box result-box-with-copy">
+                                {{ convertedTime }}
+                                <button class="copy-btn" @click="copyToClipboard(convertedTime, $event)">📋
+                                    Copy</button>
+                            </div>
+                        </div>
+
+                        <div class="tool-card">
+                            <h3>📆 Local Time to Timestamp</h3>
+                            <div class="form-group">
+                                <label>Date Time:</label>
+                                <input v-model="datetimeInput" type="datetime-local" @input="convertToTimestamp">
+                            </div>
+                            <div v-if="convertedTimestamp" class="result-box">
+                                <div style="margin-bottom: 8px;">
+                                    <strong>Unix Timestamp (seconds):</strong> {{ convertedTimestamp.seconds }}
+                                </div>
+                                <div style="margin-bottom: 16px;">
+                                    <strong>Unix Timestamp (milliseconds):</strong> {{ convertedTimestamp.milliseconds
+                                    }}
+                                </div>
+                                <button class="copy-btn" style="position: static; margin: 0;"
+                                    @click="copyToClipboard(`Unix Timestamp (seconds): ${convertedTimestamp.seconds}\nUnix Timestamp (milliseconds): ${convertedTimestamp.milliseconds}`, $event)">📋
+                                    Copy All</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Encoding/Decoding -->
+                <div v-show="currentTab === 'encoder'" class="encoder-decoder">
+                    <div class="page-header">
+                        <h2>🔐 Encoding/Decoding</h2>
+                        <p>Base64, URL, JWT encoding and decoding tools</p>
+                    </div>
+
+                    <div class="encoder-tabs">
+                        <button v-for="tab in encoderTabs" :key="tab.id" class="encoder-tab"
+                            :class="{ active: currentEncoderTab === tab.id }" @click="currentEncoderTab = tab.id">
+                            {{ tab.name }}
+                        </button>
+                    </div>
+
+                    <div class="encoder-content">
+                        <!-- Base64 Encoding/Decoding -->
+                        <div v-show="currentEncoderTab === 'base64'" class="tool-card">
+                            <h3>🔢 Base64 Encoding/Decoding</h3>
+                            <div class="form-group">
+                                <label>Original Text:</label>
+                                <textarea v-model="base64Input" placeholder="Enter text to encode/decode"
+                                    rows="6"></textarea>
+                            </div>
+                            <div class="button-group">
+                                <button @click="encodeBase64">🔐 Encode</button>
+                                <button @click="decodeBase64" class="secondary">🔓 Decode</button>
+                                <button @click="clearBase64" class="danger">🗑️ Clear</button>
+                            </div>
+                            <div v-if="base64Result" class="result-box result-box-with-copy">
+                                {{ base64Result }}
+                                <button class="copy-btn" @click="copyToClipboard(base64Result, $event)">📋 Copy</button>
+                            </div>
+                        </div>
+
+                        <!-- URL Encoding/Decoding -->
+                        <div v-show="currentEncoderTab === 'url'" class="tool-card">
+                            <h3>🔗 URL Encoding/Decoding</h3>
+                            <div class="form-group">
+                                <label>URL Text:</label>
+                                <textarea v-model="urlInput" placeholder="Enter URL or text" rows="6"></textarea>
+                            </div>
+                            <div class="button-group">
+                                <button @click="encodeUrl">🔐 Encode</button>
+                                <button @click="decodeUrl" class="secondary">🔓 Decode</button>
+                                <button @click="clearUrl" class="danger">🗑️ Clear</button>
+                            </div>
+                            <div v-if="urlResult" class="result-box result-box-with-copy">
+                                {{ urlResult }}
+                                <button class="copy-btn" @click="copyToClipboard(urlResult, $event)">📋 Copy</button>
+                            </div>
+                        </div>
+
+                        <!-- JWT Decoding -->
+                        <div v-show="currentEncoderTab === 'jwt'" class="tool-card">
+                            <h3>🎫 JWT Decoding</h3>
+
+                            <div class="form-group">
+                                <label>JWT Token:</label>
+                                <textarea v-model="jwtInput" placeholder="Enter JWT Token" rows="6"></textarea>
+                            </div>
+                            <div class="button-group">
+                                <button @click="decodeJWT">🔓 Decode</button>
+                                <button @click="clearJWT" class="danger">🗑️ Clear</button>
+                            </div>
+                            <div v-if="jwtResult" class="result-box result-box-with-copy">
+                                {{ jwtResult }}
+                                <button class="copy-btn" @click="copyToClipboard(jwtResult, $event)">📋 Copy</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Formatting Tools -->
+                <div v-show="currentTab === 'formatter'" class="formatter">
+                    <div class="page-header">
+                        <h2>📝 Formatting Tools</h2>
+                        <p>JSON, YAML formatting and beautification</p>
+                    </div>
+
+                    <div class="encoder-tabs">
+                        <button v-for="tab in formatterTabs" :key="tab.id" class="encoder-tab"
+                            :class="{ active: currentFormatterTab === tab.id }" @click="currentFormatterTab = tab.id">
+                            {{ tab.name }}
+                        </button>
+                    </div>
+
+                    <div class="tool-card">
+                        <div class="form-group">
+                            <label>Input Content:</label>
+                            <textarea v-model="formatterInput" :placeholder="getFormatterPlaceholder()"
+                                rows="10"></textarea>
+                        </div>
+                        <button @click="formatContent" class="success">✨ Format</button>
+                        <button @click="minifyContent" class="secondary">📦 Minify</button>
+                        <button @click="validateContent">✅ Validate</button>
+                        <button @click="clearFormatter" class="danger">🗑️ Clear</button>
+
+                        <!-- Results Display Area -->
+                        <div v-if="formatterResult">
+                            <!-- View toggle buttons -->
+                            <div class="view-toggle"
+                                v-if="formatterParsedData && (currentFormatterTab === 'json' || currentFormatterTab === 'yaml')">
+                                <button :class="{ active: formatterViewMode === 'text' }"
+                                    @click="formatterViewMode = 'text'">
+                                    📝 Text View
+                                </button>
+                                <button :class="{ active: formatterViewMode === 'tree' }"
+                                    @click="formatterViewMode = 'tree'">
+                                    🌳 Tree View
+                                </button>
+                            </div>
+
+                            <!-- Search functionality -->
+                            <div class="search-container"
+                                v-if="formatterParsedData && (currentFormatterTab === 'json' || currentFormatterTab === 'yaml')">
+                                <input v-model="searchQuery" @input="searchInData"
+                                    @keydown.enter.prevent="nextSearchResult" class="search-input" :class="{
+                                        'has-results': searchQuery && searchResults.length > 0,
+                                        'no-results': searchQuery && searchResults.length === 0
+                                    }" placeholder="🔍 Search keys or values..." type="text" />
+                                <div class="search-stats" :class="{ 'no-results': searchResults.length === 0 }"
+                                    v-if="searchQuery">
+                                    {{ searchResults.length > 0 ? `${currentSearchIndex + 1}/${searchResults.length}` :
+                                    'No results' }}
+                                </div>
+                                <div class="search-navigation" v-if="searchResults.length > 0">
+                                    <button class="search-nav-btn" @click="previousSearchResult"
+                                        :disabled="searchResults.length === 0">
+                                        ↑
+                                    </button>
+                                    <button class="search-nav-btn" @click="nextSearchResult"
+                                        :disabled="searchResults.length === 0">
+                                        ↓
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Text View -->
+                            <div v-show="formatterViewMode === 'text'" class="result-box result-box-with-copy">
+                                <div v-html="highlightSearchInText(formatterResult)"></div>
+                                <button class="copy-btn" @click="copyToClipboard(formatterResult, $event)">📋
+                                    Copy</button>
+                            </div>
+
+                            <!-- Tree View -->
+                            <div v-show="formatterViewMode === 'tree' && formatterParsedData" class="tree-viewer">
+                                <div v-html="renderTreeViewWithSearch(formatterParsedData)"></div>
+                                <button class="copy-btn" @click="copyToClipboard(formatterResult, $event)">📋
+                                    Copy</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Generators -->
+                <div v-show="currentTab === 'generator'" class="generator">
+                    <div class="page-header">
+                        <h2>⚙️ Generators</h2>
+                        <p>Hash, UUID, password, random string generation tools</p>
+                    </div>
+
+                    <div class="encoder-tabs">
+                        <button v-for="tab in generatorTabs" :key="tab.id" class="encoder-tab"
+                            :class="{ active: currentGeneratorTab === tab.id }" @click="currentGeneratorTab = tab.id">
+                            {{ tab.name }}
+                        </button>
+                    </div>
+
+                    <div class="encoder-content">
+                        <!-- Hash Generator -->
+                        <div v-show="currentGeneratorTab === 'hash'" class="tool-card">
+                            <h3>🔒 Hash Generator</h3>
+
+                            <div class="form-group">
+                                <label>Input Text:</label>
+                                <textarea v-model="hashInput" placeholder="Enter text to generate hash"
+                                    rows="6"></textarea>
+                            </div>
+                            <div class="button-group">
+                                <button @click="generateHash('MD5')">MD5</button>
+                                <button @click="generateHash('SHA1')">SHA1</button>
+                                <button @click="generateHash('SHA256')">SHA256</button>
+                                <button @click="generateHash('SHA512')">SHA512</button>
+                                <button @click="clearHash" class="danger">🗑️ Clear</button>
+                            </div>
+                            <div v-if="hashResult" class="result-box result-box-with-copy">
+                                {{ hashResult }}
+                                <button class="copy-btn" @click="copyToClipboard(hashResult, $event)">📋 Copy</button>
+                            </div>
+                        </div>
+
+                        <!-- UUID Generator -->
+                        <div v-show="currentGeneratorTab === 'uuid'" class="tool-card">
+                            <h3>🆔 UUID Generator</h3>
+                            <div class="button-group">
+                                <button @click="generateUUID">🎲 Generate UUID</button>
+                                <button @click="generateMultipleUUID" class="secondary">🎲 Generate 10</button>
+                                <button @click="clearUUID" class="danger">🗑️ Clear</button>
+                            </div>
+                            <div v-if="uuidResult" class="result-box result-box-with-copy">
+                                {{ uuidResult }}
+                                <button class="copy-btn" @click="copyToClipboard(uuidResult, $event)">📋 Copy</button>
+                            </div>
+                        </div>
+
+                        <!-- Password Generator -->
+                        <div v-show="currentGeneratorTab === 'password'" class="tool-card">
+                            <h3>🔑 Password Generator</h3>
+
+                            <div class="form-group">
+                                <label>Password Length:</label>
+                                <input v-model.number="passwordLength" type="number" min="4" max="128" value="16">
+                            </div>
+                            <div class="form-group">
+                                <label>Character Types:</label>
+                                <div class="checkbox-group">
+                                    <div class="checkbox-item">
+                                        <input v-model="passwordOptions.uppercase" type="checkbox" id="upper">
+                                        <label for="upper">Uppercase Letters</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input v-model="passwordOptions.lowercase" type="checkbox" id="lower">
+                                        <label for="lower">Lowercase Letters</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input v-model="passwordOptions.numbers" type="checkbox" id="numbers">
+                                        <label for="numbers">Numbers</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input v-model="passwordOptions.symbols" type="checkbox" id="symbols">
+                                        <label for="symbols">Symbols</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="button-group">
+                                <button @click="generatePassword">🔑 Generate Password</button>
+                                <button @click="clearPassword" class="danger">🗑️ Clear</button>
+                            </div>
+                            <div v-if="passwordResult" class="result-box result-box-with-copy">
+                                {{ passwordResult }}
+                                <button class="copy-btn" @click="copyToClipboard(passwordResult, $event)">📋
+                                    Copy</button>
+                            </div>
+                        </div>
+
+                        <!-- Random String Generator -->
+                        <div v-show="currentGeneratorTab === 'random'" class="tool-card">
+                            <h3>🎲 Random String Generator</h3>
+                            <div class="form-group">
+                                <label>String Length:</label>
+                                <input v-model.number="randomStringLength" type="number" min="1" max="1000" value="32">
+                            </div>
+                            <div class="form-group">
+                                <label>Character Set:</label>
+                                <select v-model="randomStringType">
+                                    <option value="alphanumeric">Alphanumeric</option>
+                                    <option value="alphabetic">Letters Only</option>
+                                    <option value="numeric">Numbers Only</option>
+                                    <option value="hex">Hexadecimal</option>
+                                </select>
+                            </div>
+                            <div class="button-group">
+                                <button @click="generateRandomString">🎲 Generate</button>
+                                <button @click="clearRandomString" class="danger">🗑️ Clear</button>
+                            </div>
+                            <div v-if="randomStringResult" class="result-box result-box-with-copy">
+                                {{ randomStringResult }}
+                                <button class="copy-btn" @click="copyToClipboard(randomStringResult, $event)">📋
+                                    Copy</button>
+                            </div>
+                        </div>
+                    </div>
+                </div> <!-- Diff Comparison -->
+                <div v-show="currentTab === 'diff'" class="diff-compare">
+                    <div class="page-header">
+                        <h2>🔍 Diff Comparison</h2>
+                        <p>Text content difference comparison tool</p>
+                    </div>
+
+                    <div class="diff-container">
+                        <div class="form-group">
+                            <label>Original Text:</label>
+                            <textarea v-model="diffText1" placeholder="Enter original text" rows="15"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>New Text:</label>
+                            <textarea v-model="diffText2" placeholder="Enter comparison text" rows="15"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button @click="compareDiff" class="success">🔍 Compare</button>
+                        <button @click="clearDiff" class="secondary">🗑️ Clear</button>
+                    </div>
+
+                    <div v-if="diffStats" class="diff-stats">
+                        <div class="stat-item">
+                            <span class="stat-added">+{{ diffStats.added }}</span>
+                            <span>Added Lines</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-removed">-{{ diffStats.removed }}</span>
+                            <span>Removed Lines</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-unchanged">{{ diffStats.unchanged }}</span>
+                            <span>Unchanged Lines</span>
+                        </div>
+                    </div>
+
+                    <div v-if="diffResult" class="diff-result diff-result-with-copy" v-html="diffResult">
+                        <button class="copy-btn" @click="copyDiffResult($event)">📋 Copy</button>
+                    </div>
+                </div>
+
+                <!-- Format Conversion -->
+                <div v-show="currentTab === 'converter'" class="converter">
+                    <div class="page-header">
+                        <h2>🔄 Format Conversion</h2>
+                        <p>JSON ↔ YAML conversion tool</p>
+                    </div>
+
+                    <div class="encoder-tabs">
+                        <button v-for="tab in converterTabs" :key="tab.id" class="encoder-tab"
+                            :class="{ active: currentConverterTab === tab.id }" @click="currentConverterTab = tab.id">
+                            {{ tab.name }}
+                        </button>
+                    </div>
+
+                    <div class="tool-card">
+                        <div class="form-group">
+                            <label>Input Content:</label>
+                            <textarea v-model="converterInput" :placeholder="getConverterPlaceholder()"
+                                rows="10"></textarea>
+                        </div> <button @click="convertFormat" class="success">🔄 Convert</button>
+                        <button @click="clearConverter" class="secondary">🗑️ Clear</button>
+                        <div v-if="converterResult" class="result-box result-box-with-copy">
+                            {{ converterResult }}
+                            <button class="copy-btn" @click="copyToClipboard(converterResult, $event)">📋 Copy</button>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    currentTab: 'time',
+                    menuItems: [
+                        { id: 'time', name: 'Time Conversion', icon: '🕐' },
+                        { id: 'encoder', name: 'Encoding/Decoding', icon: '🔐' },
+                        { id: 'formatter', name: 'Formatting Tools', icon: '📝' },
+                        { id: 'generator', name: 'Generators', icon: '⚙️' },
+                        { id: 'diff', name: 'Diff Comparison', icon: '🔍' },
+                        { id: 'converter', name: 'Format Conversion', icon: '🔄' },
+                    ],
+
+                    // Time Conversion
+                    currentTimestamp: 0,
+                    currentTimestampMs: 0,
+                    currentTime: '',
+                    currentISO: '',
+                    timestampInput: '',
+                    selectedTimezone: 'Asia/Hong_Kong',
+                    convertedTime: '',
+                    datetimeInput: '',
+                    convertedTimestamp: null,
+
+                    // Encoding/Decoding
+                    currentEncoderTab: 'base64',
+                    encoderTabs: [
+                        { id: 'base64', name: 'Base64' },
+                        { id: 'url', name: 'URL' },
+                        { id: 'jwt', name: 'JWT' }
+                    ],
+                    base64Input: '',
+                    base64Result: '',
+                    urlInput: '',
+                    urlResult: '',
+                    jwtInput: '',
+                    jwtResult: '',
+
+                    // Formatting Tools
+                    currentFormatterTab: 'json',
+                    formatterTabs: [
+                        { id: 'json', name: 'JSON' },
+                        { id: 'yaml', name: 'YAML' }
+                    ],
+                    formatterInput: '',
+                    formatterResult: '',
+                    formatterViewMode: 'text', // 'text' or 'tree'
+                    formatterParsedData: null,
+                    // Search functionality
+                    searchQuery: '',
+                    searchResults: [],
+                    currentSearchIndex: -1,
+
+                    // Generators
+                    currentGeneratorTab: 'hash',
+                    generatorTabs: [
+                        { id: 'hash', name: 'Hash Generator' },
+                        { id: 'uuid', name: 'UUID Generator' },
+                        { id: 'password', name: 'Password Generator' },
+                        { id: 'random', name: 'Random String' }
+                    ],
+                    hashInput: '',
+                    hashResult: '',
+                    uuidResult: '',
+                    passwordLength: 16,
+                    passwordOptions: {
+                        uppercase: true,
+                        lowercase: true,
+                        numbers: true,
+                        symbols: false
+                    },
+                    passwordResult: '',
+                    randomStringLength: 32,
+                    randomStringType: 'alphanumeric',
+                    randomStringResult: '',
+
+                    // Diff Comparison
+                    diffText1: '',
+                    diffText2: '',
+                    diffResult: '',
+                    diffStats: null,
+
+                    // Format Conversion
+                    currentConverterTab: 'json-to-yaml',
+                    converterTabs: [
+                        { id: 'json-to-yaml', name: 'JSON → YAML' },
+                        { id: 'yaml-to-json', name: 'YAML → JSON' }
+                    ],
+                    converterInput: '',
+                    converterResult: ''
+                }
+            },
+
+            methods: {
+                setCurrentTab(tab) {
+                    this.currentTab = tab;
+                },
+
+                updateCurrentTime() {
+                    const now = new Date();
+                    this.currentTimestamp = Math.floor(now.getTime() / 1000);
+                    this.currentTimestampMs = now.getTime();
+                    this.currentTime = now.toLocaleString('en-US', {
+                        timeZone: 'Asia/Hong_Kong',
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit'
+                    });
+                    this.currentISO = now.toISOString();
+                },
+
+                copyToClipboard(text, event) {
+                    navigator.clipboard.writeText(text.toString()).then(() => {
+                        // Add visual feedback
+                        if (event && event.target) {
+                            const btn = event.target;
+                            const originalText = btn.textContent;
+                            btn.classList.add('copied');
+                            btn.textContent = '✓ Copied';
+
+                            setTimeout(() => {
+                                btn.classList.remove('copied');
+                                btn.textContent = originalText;
+                            }, 2000);
+                        }
+                    }).catch(err => {
+                        console.error('Copy failed:', err);
+                        if (event && event.target) {
+                            const btn = event.target;
+                            const originalText = btn.textContent;
+                            btn.textContent = '❌ Failed';
+                            setTimeout(() => {
+                                btn.textContent = originalText;
+                            }, 2000);
+                        }
+                    });
+                },
+
+                convertTimestamp() {
+                    if (!this.timestampInput) {
+                        this.convertedTime = '';
+                        return;
+                    }
+
+                    let timestamp = parseInt(this.timestampInput);
+                    if (isNaN(timestamp)) return;
+
+                    if (timestamp.toString().length === 10) {
+                        timestamp *= 1000;
+                    }
+
+                    const date = new Date(timestamp);
+                    this.convertedTime = date.toLocaleString('en-US', {
+                        timeZone: this.selectedTimezone,
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit'
+                    });
+                },
+
+                convertToTimestamp() {
+                    if (!this.datetimeInput) {
+                        this.convertedTimestamp = null;
+                        return;
+                    }
+
+                    const date = new Date(this.datetimeInput);
+                    const timestamp = date.getTime();
+
+                    this.convertedTimestamp = {
+                        seconds: Math.floor(timestamp / 1000),
+                        milliseconds: timestamp
+                    };
+                },
+
+                encodeBase64() {
+                    if (!this.base64Input) return;
+                    this.base64Result = btoa(unescape(encodeURIComponent(this.base64Input)));
+                },
+
+                decodeBase64() {
+                    if (!this.base64Input) return;
+                    try {
+                        this.base64Result = decodeURIComponent(escape(atob(this.base64Input)));
+                    } catch (e) {
+                        this.base64Result = 'Decode failed: ' + e.message;
+                    }
+                },
+
+                clearBase64() {
+                    this.base64Input = '';
+                    this.base64Result = '';
+                },
+
+                encodeUrl() {
+                    if (!this.urlInput) return;
+                    this.urlResult = encodeURIComponent(this.urlInput);
+                },
+
+                decodeUrl() {
+                    if (!this.urlInput) return;
+                    try {
+                        this.urlResult = decodeURIComponent(this.urlInput);
+                    } catch (e) {
+                        this.urlResult = 'Decode failed: ' + e.message;
+                    }
+                },
+
+                clearUrl() {
+                    this.urlInput = '';
+                    this.urlResult = '';
+                }, decodeJWT() {
+                    if (!this.jwtInput) return;
+                    try {
+                        const parts = this.jwtInput.split('.');
+                        if (parts.length !== 3) {
+                            this.jwtResult = 'Invalid JWT format';
+                            return;
+                        }
+
+                        const header = JSON.parse(atob(parts[0]));
+                        const payload = JSON.parse(atob(parts[1]));
+
+                        this.jwtResult = JSON.stringify({
+                            header,
+                            payload
+                        }, null, 2);
+                    } catch (e) {
+                        this.jwtResult = 'Decode failed: ' + e.message;
+                    }
+                },
+
+                clearJWT() {
+                    this.jwtInput = '';
+                    this.jwtResult = '';
+                },
+
+                getFormatterPlaceholder() {
+                    switch (this.currentFormatterTab) {
+                        case 'json': return 'Enter JSON content...';
+                        case 'yaml': return 'Enter YAML content...';
+                        default: return 'Enter content...';
+                    }
+                },
+
+                formatContent() {
+                    if (!this.formatterInput) return;
+
+                    try {
+                        if (this.currentFormatterTab === 'json') {
+                            const parsed = JSON.parse(this.formatterInput);
+                            this.formatterResult = JSON.stringify(parsed, null, 2);
+                            this.formatterParsedData = parsed; // Save parsed data for tree view
+                        } else if (this.currentFormatterTab === 'yaml') {
+                            if (typeof jsyaml !== 'undefined') {
+                                // Parse YAML and reformat
+                                const parsed = jsyaml.load(this.formatterInput);
+                                this.formatterResult = jsyaml.dump(parsed, {
+                                    indent: 2,
+                                    lineWidth: 120,
+                                    noRefs: true,
+                                    sortKeys: false
+                                });
+                                this.formatterParsedData = parsed;
+                            } else {
+                                this.formatterResult = 'YAML library not loaded';
+                                this.formatterParsedData = null;
+                            }
+                        }
+                    } catch (e) {
+                        this.formatterResult = 'Format failed: ' + e.message;
+                        this.formatterParsedData = null;
+                    }
+                },
+
+                minifyContent() {
+                    if (!this.formatterInput) return;
+
+                    try {
+                        if (this.currentFormatterTab === 'json') {
+                            const parsed = JSON.parse(this.formatterInput);
+                            this.formatterResult = JSON.stringify(parsed);
+                        } else if (this.currentFormatterTab === 'yaml') {
+                            if (typeof jsyaml !== 'undefined') {
+                                // Parse YAML and compress output
+                                const parsed = jsyaml.load(this.formatterInput);
+                                this.formatterResult = jsyaml.dump(parsed, {
+                                    flowLevel: 0,
+                                    indent: 0,
+                                    lineWidth: -1,
+                                    noRefs: true
+                                });
+                            } else {
+                                this.formatterResult = 'YAML library not loaded';
+                            }
+                        }
+                    } catch (e) {
+                        this.formatterResult = 'Minify failed: ' + e.message;
+                    }
+                }, validateContent() {
+                    if (!this.formatterInput) return;
+
+                    try {
+                        if (this.currentFormatterTab === 'json') {
+                            JSON.parse(this.formatterInput);
+                            this.formatterResult = '✅ JSON format is valid';
+                        } else if (this.currentFormatterTab === 'yaml') {
+                            if (typeof jsyaml !== 'undefined') {
+                                jsyaml.load(this.formatterInput);
+                                this.formatterResult = '✅ YAML format is valid';
+                            } else {
+                                this.formatterResult = 'YAML library not loaded';
+                            }
+                        }
+                    } catch (e) {
+                        this.formatterResult = '❌ Invalid format: ' + e.message;
+                    }
+                },
+
+                clearFormatter() {
+                    this.formatterInput = '';
+                    this.formatterResult = '';
+                    this.formatterParsedData = null;
+                    this.formatterViewMode = 'text';
+                    this.searchQuery = '';
+                    this.searchResults = [];
+                    this.currentSearchIndex = -1;
+                },
+
+                renderTreeView(data, level = 0) {
+                    if (data === null) {
+                        return '<span class="tree-value null">null</span>';
+                    }
+
+                    if (typeof data === 'string') {
+                        return `<span class="tree-value string">"${this.escapeHtml(data)}"</span>`;
+                    }
+
+                    if (typeof data === 'number') {
+                        return `<span class="tree-value number">${data}</span>`;
+                    }
+
+                    if (typeof data === 'boolean') {
+                        return `<span class="tree-value boolean">${data}</span>`;
+                    }
+
+                    if (Array.isArray(data)) {
+                        if (data.length === 0) {
+                            return '<span class="tree-value">[]</span>';
+                        }
+
+                        let html = '<span class="tree-toggle" onclick="this.parentElement.classList.toggle(\'tree-collapsed\')">▼</span>';
+                        html += `<span class="tree-key">Array[${data.length}]</span>`;
+                        html += '<div class="tree-children">';
+
+                        data.forEach((item, index) => {
+                            html += '<div class="tree-node">';
+                            html += `<span class="tree-key">[${index}]:</span>`;
+                            html += this.renderTreeView(item, level + 1);
+                            html += '</div>';
+                        });
+
+                        html += '</div>';
+                        return html;
+                    }
+
+                    if (typeof data === 'object') {
+                        const keys = Object.keys(data);
+                        if (keys.length === 0) {
+                            return '<span class="tree-value">{}</span>';
+                        }
+
+                        let html = '<span class="tree-toggle" onclick="this.parentElement.classList.toggle(\'tree-collapsed\')">▼</span>';
+                        html += `<span class="tree-key">Object{${keys.length}}</span>`;
+                        html += '<div class="tree-children">';
+
+                        keys.forEach(key => {
+                            html += '<div class="tree-node">';
+                            html += `<span class="tree-key">"${this.escapeHtml(key)}":</span>`;
+                            html += this.renderTreeView(data[key], level + 1);
+                            html += '</div>';
+                        });
+
+                        html += '</div>';
+                        return html;
+                    }
+
+                    return `<span class="tree-value">${this.escapeHtml(String(data))}</span>`;
+                },
+
+                escapeHtml(text) {
+                    const div = document.createElement('div');
+                    div.textContent = text;
+                    return div.innerHTML;
+                },
+
+                // Search functionality methods
+                searchInData() {
+                    if (!this.searchQuery || !this.formatterParsedData) {
+                        this.searchResults = [];
+                        this.currentSearchIndex = -1;
+                        return;
+                    }
+
+                    this.searchResults = this.findAllMatches(this.formatterParsedData, this.searchQuery.toLowerCase());
+                    this.currentSearchIndex = this.searchResults.length > 0 ? 0 : -1;
+                },
+
+                findAllMatches(obj, query, path = []) {
+                    const matches = [];
+
+                    if (obj === null || obj === undefined) {
+                        return matches;
+                    }
+
+                    if (Array.isArray(obj)) {
+                        obj.forEach((item, index) => {
+                            const currentPath = [...path, `[${index}]`];
+                            matches.push(...this.findAllMatches(item, query, currentPath));
+                        });
+                    } else if (typeof obj === 'object') {
+                        Object.keys(obj).forEach(key => {
+                            const currentPath = [...path, key];
+
+                            // Check if key name matches
+                            if (key.toLowerCase().includes(query)) {
+                                matches.push({
+                                    type: 'key',
+                                    path: currentPath,
+                                    value: key,
+                                    fullPath: currentPath.join('.')
+                                });
+                            }
+
+                            // Recursively check values
+                            matches.push(...this.findAllMatches(obj[key], query, currentPath));
+                        });
+                    } else {
+                        // Check if basic type values match
+                        const stringValue = String(obj).toLowerCase();
+                        if (stringValue.includes(query)) {
+                            matches.push({
+                                type: 'value',
+                                path: path,
+                                value: obj,
+                                fullPath: path.join('.')
+                            });
+                        }
+                    }
+
+                    return matches;
+                },
+
+                nextSearchResult() {
+                    if (this.searchResults.length === 0) return;
+                    this.currentSearchIndex = (this.currentSearchIndex + 1) % this.searchResults.length;
+                    this.scrollToSearchResult();
+                },
+
+                previousSearchResult() {
+                    if (this.searchResults.length === 0) return;
+                    this.currentSearchIndex = this.currentSearchIndex <= 0
+                        ? this.searchResults.length - 1
+                        : this.currentSearchIndex - 1;
+                    this.scrollToSearchResult();
+                },
+
+                scrollToSearchResult() {
+                    // Scroll to current search result (can be implemented in future versions)
+                    // Currently not implementing scroll functionality, focusing on highlighting
+                },
+
+                highlightSearchInText(text) {
+                    if (!this.searchQuery) {
+                        return this.escapeHtml(text);
+                    }
+
+                    const escapedText = this.escapeHtml(text);
+                    const query = this.escapeHtml(this.searchQuery);
+                    const regex = new RegExp(`(${query})`, 'gi');
+
+                    return escapedText.replace(regex, '<span class="search-highlight">$1</span>');
+                },
+
+                renderTreeViewWithSearch(data, level = 0) {
+                    return this.renderTreeViewInternal(data, level, true);
+                },
+
+                renderTreeViewInternal(data, level = 0, withSearch = false, path = []) {
+                    if (data === null) {
+                        const valueText = 'null';
+                        const highlighted = withSearch ? this.highlightValue(valueText, path) : valueText;
+                        return `<span class="tree-value null">${highlighted}</span>`;
+                    }
+
+                    if (typeof data === 'string') {
+                        const valueText = `"${this.escapeHtml(data)}"`;
+                        const highlighted = withSearch ? this.highlightValue(valueText, path) : valueText;
+                        return `<span class="tree-value string">${highlighted}</span>`;
+                    }
+
+                    if (typeof data === 'number') {
+                        const valueText = String(data);
+                        const highlighted = withSearch ? this.highlightValue(valueText, path) : valueText;
+                        return `<span class="tree-value number">${highlighted}</span>`;
+                    }
+
+                    if (typeof data === 'boolean') {
+                        const valueText = String(data);
+                        const highlighted = withSearch ? this.highlightValue(valueText, path) : valueText;
+                        return `<span class="tree-value boolean">${highlighted}</span>`;
+                    }
+
+                    if (Array.isArray(data)) {
+                        if (data.length === 0) {
+                            return '<span class="tree-value">[]</span>';
+                        }
+
+                        let html = '<span class="tree-toggle" onclick="this.parentElement.classList.toggle(\'tree-collapsed\')">▼</span>';
+                        html += `<span class="tree-key">Array[${data.length}]</span>`;
+                        html += '<div class="tree-children">';
+
+                        data.forEach((item, index) => {
+                            const currentPath = [...path, `[${index}]`];
+                            html += '<div class="tree-node">';
+                            const keyText = `[${index}]`;
+                            const highlightedKey = withSearch ? this.highlightKey(keyText, currentPath) : keyText;
+                            html += `<span class="tree-key">${highlightedKey}:</span>`;
+                            html += this.renderTreeViewInternal(item, level + 1, withSearch, currentPath);
+                            html += '</div>';
+                        });
+
+                        html += '</div>';
+                        return html;
+                    }
+
+                    if (typeof data === 'object') {
+                        const keys = Object.keys(data);
+                        if (keys.length === 0) {
+                            return '<span class="tree-value">{}</span>';
+                        }
+
+                        let html = '<span class="tree-toggle" onclick="this.parentElement.classList.toggle(\'tree-collapsed\')">▼</span>';
+                        html += `<span class="tree-key">Object{${keys.length}}</span>`;
+                        html += '<div class="tree-children">';
+
+                        keys.forEach(key => {
+                            const currentPath = [...path, key];
+                            html += '<div class="tree-node">';
+                            const keyText = `"${this.escapeHtml(key)}"`;
+                            const highlightedKey = withSearch ? this.highlightKey(keyText, currentPath) : keyText;
+                            html += `<span class="tree-key">${highlightedKey}:</span>`;
+                            html += this.renderTreeViewInternal(data[key], level + 1, withSearch, currentPath);
+                            html += '</div>';
+                        });
+
+                        html += '</div>';
+                        return html;
+                    }
+
+                    const valueText = this.escapeHtml(String(data));
+                    const highlighted = withSearch ? this.highlightValue(valueText, path) : valueText;
+                    return `<span class="tree-value">${highlighted}</span>`;
+                },
+
+                highlightKey(keyText, path) {
+                    if (!this.searchQuery) return keyText;
+
+                    const pathString = path.join('.');
+                    const isMatched = this.searchResults.some((result, index) =>
+                        result.type === 'key' && result.fullPath === pathString
+                    );
+
+                    if (isMatched) {
+                        const currentMatch = this.searchResults.findIndex((result, index) =>
+                            result.type === 'key' && result.fullPath === pathString && index === this.currentSearchIndex
+                        );
+                        const isCurrent = currentMatch !== -1;
+                        const className = isCurrent ? 'search-highlight current' : 'search-highlight';
+
+                        const query = this.escapeHtml(this.searchQuery);
+                        const regex = new RegExp(`(${query})`, 'gi');
+                        return keyText.replace(regex, `<span class="${className}">$1</span>`);
+                    }
+
+                    return keyText;
+                },
+
+                highlightValue(valueText, path) {
+                    if (!this.searchQuery) return valueText;
+
+                    const pathString = path.join('.');
+                    const isMatched = this.searchResults.some((result, index) =>
+                        result.type === 'value' && result.fullPath === pathString
+                    );
+
+                    if (isMatched) {
+                        const currentMatch = this.searchResults.findIndex((result, index) =>
+                            result.type === 'value' && result.fullPath === pathString && index === this.currentSearchIndex
+                        );
+                        const isCurrent = currentMatch !== -1;
+                        const className = isCurrent ? 'search-highlight current' : 'search-highlight';
+
+                        const query = this.escapeHtml(this.searchQuery);
+                        const regex = new RegExp(`(${query})`, 'gi');
+                        return valueText.replace(regex, `<span class="${className}">$1</span>`);
+                    }
+
+                    return valueText;
+                },
+
+                generateHash(algorithm) {
+                    if (!this.hashInput) return;
+
+                    if (typeof CryptoJS !== 'undefined') {
+                        let hash;
+                        switch (algorithm) {
+                            case 'MD5':
+                                hash = CryptoJS.MD5(this.hashInput);
+                                break;
+                            case 'SHA1':
+                                hash = CryptoJS.SHA1(this.hashInput);
+                                break;
+                            case 'SHA256':
+                                hash = CryptoJS.SHA256(this.hashInput);
+                                break;
+                            case 'SHA512':
+                                hash = CryptoJS.SHA512(this.hashInput);
+                                break;
+                        }
+                        this.hashResult = `${algorithm}: ${hash.toString()}`;
+                    } else {
+                        this.hashResult = 'Crypto library not loaded';
+                    }
+                },
+
+                clearHash() {
+                    this.hashInput = '';
+                    this.hashResult = '';
+                },
+
+                generateUUID() {
+                    this.uuidResult = this.uuid4();
+                },
+
+                generateMultipleUUID() {
+                    const uuids = [];
+                    for (let i = 0; i < 10; i++) {
+                        uuids.push(this.uuid4());
+                    }
+                    this.uuidResult = uuids.join('\n');
+                },
+
+                clearUUID() {
+                    this.uuidResult = '';
+                },
+
+                uuid4() {
+                    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+                        const r = Math.random() * 16 | 0;
+                        const v = c == 'x' ? r : (r & 0x3 | 0x8);
+                        return v.toString(16);
+                    });
+                }, generatePassword() {
+                    const chars = {
+                        uppercase: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+                        lowercase: 'abcdefghijklmnopqrstuvwxyz',
+                        numbers: '0123456789',
+                        symbols: '!@#$%^&*()_+-=[]{}|;:,.<>?'
+                    };
+
+                    let charset = '';
+                    for (const [key, value] of Object.entries(this.passwordOptions)) {
+                        if (value) charset += chars[key];
+                    }
+
+                    if (!charset) {
+                        this.passwordResult = 'Please select at least one character type';
+                        return;
+                    }
+
+                    let password = '';
+                    for (let i = 0; i < this.passwordLength; i++) {
+                        password += charset.charAt(Math.floor(Math.random() * charset.length));
+                    }
+
+                    this.passwordResult = password;
+                },
+
+                clearPassword() {
+                    this.passwordResult = '';
+                }, generateRandomString() {
+                    const charsets = {
+                        alphanumeric: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
+                        alphabetic: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz',
+                        numeric: '0123456789',
+                        hex: '0123456789ABCDEF'
+                    };
+
+                    const charset = charsets[this.randomStringType];
+                    let result = '';
+
+                    for (let i = 0; i < this.randomStringLength; i++) {
+                        result += charset.charAt(Math.floor(Math.random() * charset.length));
+                    }
+
+                    this.randomStringResult = result;
+                },
+
+                clearRandomString() {
+                    this.randomStringResult = '';
+                }, compareDiff() {
+                    if (!this.diffText1 || !this.diffText2) {
+                        this.diffResult = 'Please enter two texts for comparison';
+                        this.diffStats = null;
+                        return;
+                    }
+
+                    // Simple line-by-line diff comparison
+                    const lines1 = this.diffText1.split('\n');
+                    const lines2 = this.diffText2.split('\n');
+                    const maxLines = Math.max(lines1.length, lines2.length);
+
+                    let result = '';
+                    let stats = { added: 0, removed: 0, unchanged: 0 };
+
+                    for (let i = 0; i < maxLines; i++) {
+                        const line1 = lines1[i] || '';
+                        const line2 = lines2[i] || '';
+
+                        if (line1 === line2) {
+                            result += `  ${line1}\n`;
+                            if (line1) stats.unchanged++;
+                        } else {
+                            if (line1) {
+                                result += `<span class="diff-removed">- ${line1}</span>\n`;
+                                stats.removed++;
+                            }
+                            if (line2) {
+                                result += `<span class="diff-added">+ ${line2}</span>\n`;
+                                stats.added++;
+                            }
+                        }
+                    }
+
+                    this.diffResult = result;
+                    this.diffStats = stats;
+                },
+
+                copyDiffResult(event) {
+                    // Copy plain text version (remove HTML tags)
+                    const plainText = this.diffResult.replace(/<[^>]*>/g, '');
+                    this.copyToClipboard(plainText, event);
+                },
+
+                clearDiff() {
+                    this.diffText1 = '';
+                    this.diffText2 = '';
+                    this.diffResult = '';
+                    this.diffStats = null;
+                },
+
+                getConverterPlaceholder() {
+                    switch (this.currentConverterTab) {
+                        case 'json-to-yaml': return 'Enter JSON content...';
+                        case 'yaml-to-json': return 'Enter YAML content...';
+                        default: return 'Enter content...';
+                    }
+                },
+
+                convertFormat() {
+                    if (!this.converterInput) return;
+
+                    try {
+                        if (this.currentConverterTab === 'json-to-yaml') {
+                            const parsed = JSON.parse(this.converterInput);
+                            if (typeof jsyaml !== 'undefined') {
+                                this.converterResult = jsyaml.dump(parsed);
+                            } else {
+                                this.converterResult = 'Simplified YAML output:\n' + JSON.stringify(parsed, null, 2);
+                            }
+                        } else if (this.currentConverterTab === 'yaml-to-json') {
+                            if (typeof jsyaml !== 'undefined') {
+                                const parsed = jsyaml.load(this.converterInput);
+                                this.converterResult = JSON.stringify(parsed, null, 2);
+                            } else {
+                                this.converterResult = 'YAML conversion library not loaded';
+                            }
+                        }
+                    } catch (e) {
+                        this.converterResult = 'Conversion failed: ' + e.message;
+                    }
+                },
+
+                clearConverter() {
+                    this.converterInput = '';
+                    this.converterResult = '';
+                }
+            },
+
+            mounted() {
+                this.updateCurrentTime();
+                setInterval(this.updateCurrentTime, 1000);
+
+                // Set default current time
+                const now = new Date();
+                const localDateTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+                this.datetimeInput = localDateTime.toISOString().slice(0, 16);
+                this.convertToTimestamp();
+            }
+        }).mount('#app');
+    </script>
+</body>
+
+</html>
