@@ -225,7 +225,6 @@
         /* Date time input special styles */
         input[type="datetime-local"] {
             background: var(--secondary-bg);
-            border: 2px solid var(--accent-blue);
             color: var(--text-primary);
         }
 
@@ -233,7 +232,8 @@
             background-color: var(--accent-blue);
             border-radius: 3px;
             cursor: pointer;
-            filter: invert(1);
+            filter: invert(0);
+            /* Changed from invert(1) to make the icon dark */
         }
 
         input:focus,
@@ -843,7 +843,7 @@
             font-weight: bold;
             box-shadow: 0 3px 12px rgba(255, 152, 0, 0.7);
             border: 2px solid #ff9800;
-            animation: currentMatchPulse 1.5s ease-in-out infinite alternate;
+            animation: currentMatchPulse 1.5s ease-in-out infinite;
             transform: scale(1.08);
             z-index: 10;
         }
@@ -987,11 +987,7 @@
                                     currentTimestamp
                                     }}</span>
                             </div>
-                            <div class="current-time">
-                                <span>Unix Timestamp (milliseconds):</span>
-                                <span class="time-value" @click="copyToClipboard(currentTimestampMs, $event)">{{
-                                    currentTimestampMs }}</span>
-                            </div>
+                            <!-- Removed milliseconds display -->
                             <div class="current-time">
                                 <span>Current Time:</span>
                                 <span class="time-value">{{ currentTime }}</span>
@@ -1001,8 +997,8 @@
                         <div class="tool-card">
                             <h3>⏰ Timestamp to Local Time</h3>
                             <div class="form-group">
-                                <label>Timestamp:</label>
-                                <input v-model="timestampInput" placeholder="Enter timestamp (seconds or milliseconds)"
+                                <label>Timestamp (seconds):</label> <!-- Clarified label -->
+                                <input v-model="timestampInput" placeholder="Enter timestamp in seconds"
                                     @input="convertTimestamp">
                             </div>
                             <div class="form-group">
@@ -1027,19 +1023,17 @@
                             <h3>📆 Local Time to Timestamp</h3>
                             <div class="form-group">
                                 <label>Date Time:</label>
-                                <input v-model="datetimeInput" type="datetime-local" @input="convertToTimestamp">
+                                <input v-model="datetimeInput" type="datetime-local" step="1"
+                                    @input="convertToTimestamp"> <!-- Added step="1" to remove milliseconds -->
                             </div>
                             <div v-if="convertedTimestamp" class="result-box">
                                 <div style="margin-bottom: 8px;">
                                     <strong>Unix Timestamp (seconds):</strong> {{ convertedTimestamp.seconds }}
                                 </div>
-                                <div style="margin-bottom: 16px;">
-                                    <strong>Unix Timestamp (milliseconds):</strong> {{ convertedTimestamp.milliseconds
-                                    }}
-                                </div>
+                                <!-- Removed milliseconds display -->
                                 <button class="copy-btn" style="position: static; margin: 0;"
-                                    @click="copyToClipboard(`Unix Timestamp (seconds): ${convertedTimestamp.seconds}\nUnix Timestamp (milliseconds): ${convertedTimestamp.milliseconds}`, $event)">📋
-                                    Copy All</button>
+                                    @click="copyToClipboard(`Unix Timestamp (seconds): ${convertedTimestamp.seconds}`, $event)">📋
+                                    Copy Seconds</button> <!-- Updated button text -->
                             </div>
                         </div>
                     </div>
@@ -1493,49 +1487,12 @@
                     this.currentTab = tab;
                 },
 
-                updateCurrentTime() {
+                updateTime() {
                     const now = new Date();
                     this.currentTimestamp = Math.floor(now.getTime() / 1000);
-                    this.currentTimestampMs = now.getTime();
-                    this.currentTime = now.toLocaleString('en-US', {
-                        timeZone: 'Asia/Hong_Kong',
-                        year: 'numeric',
-                        month: '2-digit',
-                        day: '2-digit',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        second: '2-digit'
-                    });
-                    this.currentISO = now.toISOString();
+                    // this.currentTimestampMs = now.getTime(); // Removed milliseconds
+                    this.currentTime = now.toLocaleTimeString('en-US', { hour12: false }); // Removed milliseconds from current time display
                 },
-
-                copyToClipboard(text, event) {
-                    navigator.clipboard.writeText(text.toString()).then(() => {
-                        // Add visual feedback
-                        if (event && event.target) {
-                            const btn = event.target;
-                            const originalText = btn.textContent;
-                            btn.classList.add('copied');
-                            btn.textContent = '✓ Copied';
-
-                            setTimeout(() => {
-                                btn.classList.remove('copied');
-                                btn.textContent = originalText;
-                            }, 2000);
-                        }
-                    }).catch(err => {
-                        console.error('Copy failed:', err);
-                        if (event && event.target) {
-                            const btn = event.target;
-                            const originalText = btn.textContent;
-                            btn.textContent = '❌ Failed';
-                            setTimeout(() => {
-                                btn.textContent = originalText;
-                            }, 2000);
-                        }
-                    });
-                },
-
                 convertTimestamp() {
                     if (!this.timestampInput) {
                         this.convertedTime = '';
@@ -1543,37 +1500,52 @@
                     }
 
                     let timestamp = parseInt(this.timestampInput);
-                    if (isNaN(timestamp)) return;
+                    // Assume seconds if timestamp is less than 100000000000 (a common threshold)
+                    // Otherwise, assume milliseconds. For this optimization, we will always assume seconds.
+                    // if (timestamp > 100000000000) { 
+                    //     timestamp = Math.floor(timestamp / 1000);
+                    // }
+                    const date = new Date(timestamp * 1000);
 
-                    if (timestamp.toString().length === 10) {
-                        timestamp *= 1000;
+                    try {
+                        this.convertedTime = date.toLocaleString('en-US', {
+                            timeZone: this.selectedTimezone,
+                            hour12: false,
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit' // Ensure seconds are displayed
+                        });
+                    } catch (e) {
+                        this.convertedTime = "Invalid timezone or timestamp";
+                        console.error("Error converting timestamp:", e);
                     }
-
-                    const date = new Date(timestamp);
-                    this.convertedTime = date.toLocaleString('en-US', {
-                        timeZone: this.selectedTimezone,
-                        year: 'numeric',
-                        month: '2-digit',
-                        day: '2-digit',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        second: '2-digit'
-                    });
                 },
-
                 convertToTimestamp() {
                     if (!this.datetimeInput) {
                         this.convertedTimestamp = null;
                         return;
                     }
+                    try {
+                        // Ensure the input string is correctly parsed.
+                        // The input type="datetime-local" provides a string like "YYYY-MM-DDTHH:MM" or "YYYY-MM-DDTHH:MM:SS"
+                        // We need to make sure it's treated as local time.
+                        const localDate = new Date(this.datetimeInput);
+                        if (isNaN(localDate.getTime())) {
+                            this.convertedTimestamp = { error: "Invalid date time format" };
+                            return;
+                        }
 
-                    const date = new Date(this.datetimeInput);
-                    const timestamp = date.getTime();
-
-                    this.convertedTimestamp = {
-                        seconds: Math.floor(timestamp / 1000),
-                        milliseconds: timestamp
-                    };
+                        this.convertedTimestamp = {
+                            seconds: Math.floor(localDate.getTime() / 1000),
+                            // milliseconds: localDate.getTime() // Removed milliseconds
+                        };
+                    } catch (e) {
+                        this.convertedTimestamp = { error: "Error converting to timestamp" };
+                        console.error("Error converting to timestamp:", e);
+                    }
                 },
 
                 encodeBase64() {
@@ -2202,8 +2174,8 @@
             },
 
             mounted() {
-                this.updateCurrentTime();
-                setInterval(this.updateCurrentTime, 1000);
+                this.updateTime();
+                setInterval(this.updateTime, 1000);
 
                 // Set default current time
                 const now = new Date();
