@@ -2737,6 +2737,63 @@
 
                 getRegexFlags() {
                     return Object.keys(this.regexFlags).filter(key => this.regexFlags[key]).join('');
+                },
+
+                async copyToClipboard(text, event) {
+                    try {
+                        await navigator.clipboard.writeText(text);
+                        
+                        // Show visual feedback
+                        const button = event.target;
+                        const originalText = button.textContent;
+                        button.textContent = '✅ Copied!';
+                        button.style.background = 'var(--accent-green)';
+                        
+                        setTimeout(() => {
+                            button.textContent = originalText;
+                            button.style.background = '';
+                        }, 2000);
+                    } catch (err) {
+                        // Fallback for older browsers
+                        const textArea = document.createElement('textarea');
+                        textArea.value = text;
+                        textArea.style.position = 'fixed';
+                        textArea.style.left = '-999999px';
+                        textArea.style.top = '-999999px';
+                        document.body.appendChild(textArea);
+                        textArea.focus();
+                        textArea.select();
+                        
+                        try {
+                            document.execCommand('copy');
+                            
+                            // Show visual feedback
+                            const button = event.target;
+                            const originalText = button.textContent;
+                            button.textContent = '✅ Copied!';
+                            button.style.background = 'var(--accent-green)';
+                            
+                            setTimeout(() => {
+                                button.textContent = originalText;
+                                button.style.background = '';
+                            }, 2000);
+                        } catch (copyErr) {
+                            console.error('Could not copy text: ', copyErr);
+                            
+                            // Show error feedback
+                            const button = event.target;
+                            const originalText = button.textContent;
+                            button.textContent = '❌ Failed';
+                            button.style.background = 'var(--accent-red)';
+                            
+                            setTimeout(() => {
+                                button.textContent = originalText;
+                                button.style.background = '';
+                            }, 2000);
+                        }
+                        
+                        document.body.removeChild(textArea);
+                    }
                 }
             },
 
