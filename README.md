@@ -63,7 +63,7 @@ DevTools is a comprehensive local toolkit designed specifically for developers, 
 1. **Download File**
    ```bash
    # Download the complete tool
-   curl -O https://github.com/dingjiayi/devtools/master/all-in-one-devtools.html
+   curl -O https://raw.githubusercontent.com/dingjiayi/devtools/refs/heads/main/all-in-one-devtools.html
    # Or download directly from the project repository
    ```
 
