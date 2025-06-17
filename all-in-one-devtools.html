@@ -1108,6 +1108,26 @@
                                 <button class="copy-btn" @click="copyToClipboard(jwtResult, $event)">📋 Copy</button>
                             </div>
                         </div>
+
+                        <!-- Unicode Encoding/Decoding -->
+                        <div v-show="currentEncoderTab === 'unicode'" class="tool-card">
+                            <h3> Unicode Encoding/Decoding</h3>
+                            <div class="form-group">
+                                <label>Original Text:</label>
+                                <textarea v-model="unicodeInput" placeholder="Enter text to encode/decode"
+                                    rows="6"></textarea>
+                            </div>
+                            <div class="button-group">
+                                <button @click="encodeUnicode">🔐 Encode</button>
+                                <button @click="decodeUnicode" class="secondary">🔓 Decode</button>
+                                <button @click="clearUnicode" class="danger">🗑️ Clear</button>
+                            </div>
+                            <div v-if="unicodeResult" class="result-box result-box-with-copy">
+                                {{ unicodeResult }}
+                                <button class="copy-btn" @click="copyToClipboard(unicodeResult, $event)">📋
+                                    Copy</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -1418,7 +1438,8 @@
                     encoderTabs: [
                         { id: 'base64', name: 'Base64' },
                         { id: 'url', name: 'URL' },
-                        { id: 'jwt', name: 'JWT' }
+                        { id: 'jwt', name: 'JWT' },
+                        { id: 'unicode', name: 'Unicode' }
                     ],
                     base64Input: '',
                     base64Result: '',
@@ -1426,6 +1447,8 @@
                     urlResult: '',
                     jwtInput: '',
                     jwtResult: '',
+                    unicodeInput: '',
+                    unicodeResult: '',
 
                     // Formatting Tools
                     currentFormatterTab: 'json',
@@ -1608,6 +1631,43 @@
                 clearJWT() {
                     this.jwtInput = '';
                     this.jwtResult = '';
+                },
+
+                encodeUnicode() {
+                    if (!this.unicodeInput) return;
+                    let result = '';
+                    for (let i = 0; i < this.unicodeInput.length; i++) {
+                        let hex = this.unicodeInput.charCodeAt(i).toString(16);
+                        result += '\\u' + '0000'.substring(0, 4 - hex.length) + hex;
+                    }
+                    this.unicodeResult = result;
+                },
+
+                decodeUnicode() {
+                    if (!this.unicodeInput) return;
+                    try {
+                        this.unicodeResult = this.unicodeInput.replace(/\\u([0-9A-Fa-f]{4})/g, (match, grp) => {
+                            return String.fromCharCode(parseInt(grp, 16));
+                        });
+                        // Also handle uppercase U format
+                        this.unicodeResult = this.unicodeResult.replace(/\\U([0-9A-Fa-f]{8})/g, (match, grp) => {
+                            let codePoint = parseInt(grp, 16);
+                            if (codePoint > 0xFFFF) {
+                                // Handle supplementary characters using surrogate pairs
+                                let H = Math.floor((codePoint - 0x10000) / 0x400) + 0xD800;
+                                let L = (codePoint - 0x10000) % 0x400 + 0xDC00;
+                                return String.fromCharCode(H, L);
+                            }
+                            return String.fromCharCode(codePoint);
+                        });
+                    } catch (e) {
+                        this.unicodeResult = 'Decode failed: ' + e.message;
+                    }
+                },
+
+                clearUnicode() {
+                    this.unicodeInput = '';
+                    this.unicodeResult = '';
                 },
 
                 getFormatterPlaceholder() {
