@@ -931,6 +931,221 @@
         ::-webkit-scrollbar-thumb:hover {
             background: var(--hover-bg);
         }
+
+        /* Regex Tester Styles */
+        .regex-flags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .flag-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .flag-checkbox input[type="checkbox"] {
+            margin-right: 4px;
+        }
+
+        .flag-checkbox span {
+            font-weight: bold;
+            color: var(--accent-blue);
+            background: rgba(88, 166, 255, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+        }
+
+        .flag-checkbox small {
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        .regex-info {
+            background: var(--tertiary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 12px;
+            margin: 16px 0;
+        }
+
+        .regex-info code {
+            background: rgba(88, 166, 255, 0.1);
+            color: var(--accent-blue);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+        }
+
+        .regex-info .error {
+            color: var(--accent-red);
+        }
+
+        .regex-info .success {
+            color: var(--accent-green);
+        }
+
+        .regex-info .warning {
+            color: var(--accent-orange);
+        }
+
+        .performance-hint {
+            color: var(--accent-purple);
+            font-size: 12px;
+            font-style: italic;
+        }
+
+        .regex-preview {
+            margin-top: 16px;
+        }
+
+        .regex-preview-text {
+            background: var(--tertiary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 12px;
+            font-family: var(--font-mono);
+            font-size: 14px;
+            line-height: 1.5;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        .regex-line {
+            min-height: 1.5em;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 2px 0;
+        }
+
+        .regex-line:last-child {
+            border-bottom: none;
+        }
+
+        .regex-highlight {
+            background: var(--accent-green);
+            color: var(--primary-bg);
+            padding: 1px 2px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+
+        .regex-matches {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .match-item {
+            background: var(--tertiary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+
+        .match-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 12px;
+        }
+
+        .match-index {
+            background: var(--accent-blue);
+            color: var(--primary-bg);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-weight: bold;
+        }
+
+        .match-position {
+            color: var(--text-secondary);
+            font-family: var(--font-mono);
+        }
+
+        .match-content {
+            margin-bottom: 8px;
+        }
+
+        .match-text {
+            background: rgba(86, 211, 100, 0.2);
+            color: var(--accent-green);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            font-weight: bold;
+        }
+
+        .match-groups {
+            font-size: 14px;
+        }
+
+        .group-item {
+            display: inline-block;
+            margin-right: 12px;
+            margin-bottom: 4px;
+        }
+
+        .group-item code {
+            background: rgba(165, 166, 255, 0.2);
+            color: var(--accent-purple);
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-family: var(--font-mono);
+        }
+
+        .regex-templates {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .template-category {
+            margin-bottom: 24px;
+        }
+
+        .template-category h4 {
+            color: var(--accent-orange);
+            margin-bottom: 12px;
+            font-size: 16px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 8px;
+        }
+
+        .template-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .template-btn {
+            background: var(--tertiary-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+
+        .template-btn:hover {
+            background: var(--hover-bg);
+            border-color: var(--accent-purple);
+            transform: translateY(-1px);
+        }
+
+        .template-btn.active {
+            background: rgba(165, 166, 255, 0.2);
+            border-color: var(--accent-purple);
+            color: var(--accent-purple);
+        }
     </style>
 </head>
 
@@ -1402,6 +1617,119 @@
                     </div>
                 </div>
 
+                <!-- Regex Tester -->
+                <div v-show="currentTab === 'regex'" class="regex-tester">
+                    <div class="page-header">
+                        <h2>🔧 Regular Expression Tester</h2>
+                        <p>Test and debug regular expressions with real-time feedback</p>
+                    </div>
+
+                    <div class="tools-grid">
+                        <!-- Regex Input Section -->
+                        <div class="tool-card">
+                            <h3>🎯 Regular Expression</h3>
+                            <div class="form-group">
+                                <label>Pattern:</label>
+                                <input type="text" v-model="regexInput" @input="debouncedTestRegex"
+                                    placeholder="Enter regex pattern..." />
+                            </div>
+
+                            <div class="form-group">
+                                <label>Flags:</label>
+                                <div class="regex-flags">
+                                    <label class="flag-checkbox">
+                                        <input type="checkbox" v-model="regexFlags.g" @change="debouncedTestRegex" />
+                                        <span>g</span> <small>Global</small>
+                                    </label>
+                                    <label class="flag-checkbox">
+                                        <input type="checkbox" v-model="regexFlags.i" @change="debouncedTestRegex" />
+                                        <span>i</span> <small>Ignore Case</small>
+                                    </label>
+                                    <label class="flag-checkbox">
+                                        <input type="checkbox" v-model="regexFlags.m" @change="debouncedTestRegex" />
+                                        <span>m</span> <small>Multiline</small>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="regex-info">
+                                <p><strong>Pattern:</strong>
+                                    <code>/{{ regexInput || 'empty' }}/{{ getRegexFlags() }}</code></p>
+                                <p v-if="regexError && regexError.includes('Invalid regular expression')" class="error">
+                                    ❌ {{ regexError }}</p>
+                                <p v-else-if="regexError" class="warning">⚠️ {{ regexError }}</p>
+                                <p v-else-if="regexMatches.length > 0" class="success">✅ {{ regexMatches.length }}
+                                    match(es) found</p>
+                                <p v-else-if="regexInput && regexTestText" class="warning">⚠️ No matches found</p>
+                                <p v-if="regexTestText.length > 10000" class="performance-hint">💡 For better
+                                    performance, consider using shorter text</p>
+                            </div>
+
+                            <button @click="clearRegex" class="secondary">🗑️ Clear All</button>
+                        </div>
+
+                        <!-- Test Text Section -->
+                        <div class="tool-card">
+                            <h3>📝 Test Text</h3>
+                            <div class="form-group">
+                                <label>Input Text:</label>
+                                <textarea v-model="regexTestText" @input="debouncedTestRegex"
+                                    placeholder="Enter text to test against the regex..." rows="12"></textarea>
+                            </div>
+
+                            <div v-if="regexTestText && regexInput && !regexError" class="regex-preview">
+                                <label>Preview with Highlights:</label>
+                                <div class="regex-preview-text">
+                                    <div v-for="(line, index) in regexTestText.split('\n')" :key="index"
+                                        class="regex-line" v-html="highlightMatches(line, index)"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Matches Results -->
+                    <div v-if="regexMatches.length > 0" class="tool-card">
+                        <h3>🎯 Match Results</h3>
+                        <div class="regex-matches">
+                            <div v-for="(match, index) in regexMatches" :key="index" class="match-item">
+                                <div class="match-header">
+                                    <span class="match-index">Match {{ index + 1 }}</span>
+                                    <span class="match-position">Line {{ match.lineIndex }}, Position {{ match.index
+                                        }}</span>
+                                </div>
+                                <div class="match-content">
+                                    <strong>Matched:</strong> <code class="match-text">{{ match.match }}</code>
+                                </div>
+                                <div v-if="match.groups.length > 0" class="match-groups">
+                                    <strong>Groups:</strong>
+                                    <span v-for="(group, groupIndex) in match.groups" :key="groupIndex"
+                                        class="group-item">
+                                        Group {{ groupIndex + 1 }}: <code>{{ group || '(empty)' }}</code>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Template Library -->
+                    <div class="tool-card">
+                        <h3>📚 Common Regex Templates</h3>
+                        <div class="regex-templates">
+                            <div v-for="(templates, category) in regexTemplates" :key="category"
+                                class="template-category">
+                                <h4>{{ category }}</h4>
+                                <div class="template-list">
+                                    <button v-for="template in templates" :key="template.name" class="template-btn"
+                                        :class="{ active: selectedTemplate === template }"
+                                        @click="applyTemplate(template)">
+                                        {{ template.name }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </main>
         </div>
     </div>
@@ -1420,6 +1748,7 @@
                         { id: 'generator', name: 'Generators', icon: '⚙️' },
                         { id: 'diff', name: 'Diff Comparison', icon: '🔍' },
                         { id: 'converter', name: 'Format Conversion', icon: '🔄' },
+                        { id: 'regex', name: 'Regex Tester', icon: '🔧' },
                     ],
 
                     // Time Conversion
@@ -1501,7 +1830,48 @@
                         { id: 'yaml-to-json', name: 'YAML → JSON' }
                     ],
                     converterInput: '',
-                    converterResult: ''
+                    converterResult: '',
+
+                    // Regex Tester
+                    regexInput: '',
+                    regexTestText: '',
+                    regexFlags: {
+                        g: true,
+                        i: false,
+                        m: false,
+                        s: false,
+                        u: false,
+                        y: false
+                    },
+                    regexMatches: [],
+                    regexError: '',
+                    selectedTemplate: null,
+                    regexDebounceTimer: null,
+                    regexTemplates: {
+                        '📁 Backend Validation': [
+                            { name: '📧 Email Address', pattern: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$', test: 'user@example.com' },
+                            { name: '📱 Phone Number (CN)', pattern: '^1[3-9]\\d{9}$', test: '13812345678' },
+                            { name: '💳 ID Card (CN)', pattern: '^[1-9]\\d{5}(18|19|20)\\d{2}((0[1-9])|(1[0-2]))(([0-2][1-9])|10|20|30|31)\\d{3}[0-9Xx]$', test: '110101199001011234' },
+                            { name: '🔢 Pure Numbers', pattern: '^\\d+$', test: '123456' },
+                            { name: '💰 Currency Format', pattern: '^\\d+(\\.\\d{1,2})?$', test: '123.45' }
+                        ],
+                        '📁 Network Related': [
+                            { name: '🌐 URL Address', pattern: '^https?:\\/\\/(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b([-a-zA-Z0-9()@:%_\\+.~#?&//=]*)$', test: 'https://api.example.com/users' },
+                            { name: '🌍 IPv4 Address', pattern: '^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$', test: '192.168.1.1' },
+                            { name: '🔗 Domain Name', pattern: '^[a-zA-Z0-9]([a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?\\.[a-zA-Z]{2,}$', test: 'api.example.com' }
+                        ],
+                        '📁 Date & Time': [
+                            { name: '📅 Date YYYY-MM-DD', pattern: '^\\d{4}-\\d{2}-\\d{2}$', test: '2025-06-17' },
+                            { name: '🕐 Time HH:MM:SS', pattern: '^([01]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$', test: '14:30:25' },
+                            { name: '📆 ISO8601 Timestamp', pattern: '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{3})?Z?$', test: '2025-06-17T14:30:25.123Z' }
+                        ],
+                        '📁 Code Formats': [
+                            { name: '📝 Variable (camelCase)', pattern: '^[a-z][a-zA-Z0-9]*$', test: 'userName' },
+                            { name: '📝 Variable (snake_case)', pattern: '^[a-z][a-z0-9_]*$', test: 'user_name' },
+                            { name: '🎨 Hex Color', pattern: '^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$', test: '#FF5733' },
+                            { name: '🔤 UUID Format', pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$', test: '550e8400-e29b-41d4-a716-446655440000' }
+                        ]
+                    }
                 }
             },
 
@@ -2230,6 +2600,150 @@
                 clearConverter() {
                     this.converterInput = '';
                     this.converterResult = '';
+                },
+
+                // Regex Tester Methods
+                debouncedTestRegex() {
+                    // Clear previous timer
+                    if (this.regexDebounceTimer) {
+                        clearTimeout(this.regexDebounceTimer);
+                    }
+
+                    // Set new debounce timer
+                    this.regexDebounceTimer = setTimeout(() => {
+                        this.testRegex();
+                    }, 300); // 300ms debounce delay
+                },
+
+                testRegex() {
+                    this.regexMatches = [];
+                    this.regexError = '';
+
+                    if (!this.regexInput) {
+                        return;
+                    }
+
+                    try {
+                        const flags = Object.keys(this.regexFlags).filter(key => this.regexFlags[key]).join('');
+                        const regex = new RegExp(this.regexInput, flags);
+
+                        if (!this.regexTestText) {
+                            return;
+                        }
+
+                        // Performance optimization: limit text length and match count
+                        const maxTextLength = 10000;
+                        const maxMatches = 1000;
+                        const textToTest = this.regexTestText.length > maxTextLength
+                            ? this.regexTestText.substring(0, maxTextLength) + '...(truncated)'
+                            : this.regexTestText;
+
+                        const lines = textToTest.split('\n');
+                        const matches = [];
+
+                        // Performance optimization: limit processed lines
+                        const maxLines = 500;
+                        const linesToProcess = lines.slice(0, maxLines);
+
+                        for (let lineIndex = 0; lineIndex < linesToProcess.length; lineIndex++) {
+                            const line = linesToProcess[lineIndex];
+
+                            if (this.regexFlags.g) {
+                                let match;
+                                const regex = new RegExp(this.regexInput, flags);
+                                while ((match = regex.exec(line)) !== null && matches.length < maxMatches) {
+                                    matches.push({
+                                        match: match[0],
+                                        index: match.index,
+                                        lineIndex: lineIndex + 1,
+                                        line: line,
+                                        groups: match.slice(1),
+                                        fullMatch: match
+                                    });
+                                    if (!this.regexFlags.g) break;
+                                }
+                            } else {
+                                const match = line.match(regex);
+                                if (match && matches.length < maxMatches) {
+                                    matches.push({
+                                        match: match[0],
+                                        index: match.index,
+                                        lineIndex: lineIndex + 1,
+                                        line: line,
+                                        groups: match.slice(1),
+                                        fullMatch: match
+                                    });
+                                }
+                            }
+                        }
+
+                        this.regexMatches = matches;
+
+                        // Performance warnings
+                        if (this.regexTestText.length > maxTextLength) {
+                            this.regexError = `Text too long, only processing first ${maxTextLength} characters`;
+                        } else if (matches.length >= maxMatches) {
+                            this.regexError = `Too many matches, only showing first ${maxMatches} results`;
+                        } else if (lines.length > maxLines) {
+                            this.regexError = `Too many lines, only processing first ${maxLines} lines`;
+                        }
+                    } catch (error) {
+                        this.regexError = 'Invalid regular expression: ' + error.message;
+                    }
+                },
+
+                highlightMatches(text, lineIndex) {
+                    if (!this.regexInput || this.regexError.includes('Invalid regular expression')) {
+                        return text;
+                    }
+
+                    try {
+                        const lineMatches = this.regexMatches.filter(match => match.lineIndex === lineIndex + 1);
+                        if (lineMatches.length === 0) {
+                            return text;
+                        }
+
+                        let highlightedText = text;
+                        // Sort by index in descending order to avoid index shifts during replacement
+                        lineMatches.sort((a, b) => b.index - a.index);
+
+                        lineMatches.forEach(match => {
+                            const before = highlightedText.substring(0, match.index);
+                            const matchText = highlightedText.substring(match.index, match.index + match.match.length);
+                            const after = highlightedText.substring(match.index + match.match.length);
+                            highlightedText = before + `<span class="regex-highlight">${matchText}</span>` + after;
+                        });
+
+                        return highlightedText;
+                    } catch (error) {
+                        return text;
+                    }
+                },
+
+                applyTemplate(template) {
+                    this.regexInput = template.pattern;
+                    this.regexTestText = template.test;
+                    this.selectedTemplate = template;
+                    this.testRegex(); // Direct call, no debounce needed
+                },
+
+                clearRegex() {
+                    this.regexInput = '';
+                    this.regexTestText = '';
+                    this.regexMatches = [];
+                    this.regexError = '';
+                    this.selectedTemplate = null;
+                },
+
+                getRegexFlags() {
+                    return Object.keys(this.regexFlags).filter(key => this.regexFlags[key]).join('');
+                }
+            },
+
+            beforeUnmount() {
+                // Clean up timers
+                if (this.regexDebounceTimer) {
+                    clearTimeout(this.regexDebounceTimer);
                 }
             },
 
