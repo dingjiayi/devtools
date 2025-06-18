@@ -127,6 +127,41 @@
             margin-bottom: 4px;
         }
 
+        .footer a {
+            color: var(--accent-blue);
+            text-decoration: none;
+            font-size: 11px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: opacity 0.2s ease;
+        }
+
+        .footer a:hover {
+            opacity: 0.8;
+        }
+
+        .github-link {
+            margin-top: 10px;
+            padding: 6px 10px;
+            background: rgba(88, 166, 255, 0.15);
+            border: 1px solid var(--accent-blue);
+            border-radius: 4px;
+            text-decoration: none;
+            color: var(--accent-blue) !important;
+            font-size: 11px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.2s ease;
+        }
+
+        .github-link:hover {
+            background: rgba(88, 166, 255, 0.25);
+            transform: translateY(-1px);
+        }
+
         .main-content {
             flex: 1;
             margin-left: 220px;
@@ -1165,6 +1200,10 @@
                                 Local Processing</span>
                         </div>
                     </div>
+                    <a href="https://github.com/dingjiayi/devtools" target="_blank" rel="noopener noreferrer" class="github-link">
+                        <span>⭐</span>
+                        <span>GitHub</span>
+                    </a>
                 </div>
 
                 <div class="nav-menu">
@@ -1654,7 +1693,8 @@
 
                             <div class="regex-info">
                                 <p><strong>Pattern:</strong>
-                                    <code>/{{ regexInput || 'empty' }}/{{ getRegexFlags() }}</code></p>
+                                    <code>/{{ regexInput || 'empty' }}/{{ getRegexFlags() }}</code>
+                                </p>
                                 <p v-if="regexError && regexError.includes('Invalid regular expression')" class="error">
                                     ❌ {{ regexError }}</p>
                                 <p v-else-if="regexError" class="warning">⚠️ {{ regexError }}</p>
@@ -2742,13 +2782,13 @@
                 async copyToClipboard(text, event) {
                     try {
                         await navigator.clipboard.writeText(text);
-                        
+
                         // Show visual feedback
                         const button = event.target;
                         const originalText = button.textContent;
                         button.textContent = '✅ Copied!';
                         button.style.background = 'var(--accent-green)';
-                        
+
                         setTimeout(() => {
                             button.textContent = originalText;
                             button.style.background = '';
@@ -2763,35 +2803,35 @@
                         document.body.appendChild(textArea);
                         textArea.focus();
                         textArea.select();
-                        
+
                         try {
                             document.execCommand('copy');
-                            
+
                             // Show visual feedback
                             const button = event.target;
                             const originalText = button.textContent;
                             button.textContent = '✅ Copied!';
                             button.style.background = 'var(--accent-green)';
-                            
+
                             setTimeout(() => {
                                 button.textContent = originalText;
                                 button.style.background = '';
                             }, 2000);
                         } catch (copyErr) {
                             console.error('Could not copy text: ', copyErr);
-                            
+
                             // Show error feedback
                             const button = event.target;
                             const originalText = button.textContent;
                             button.textContent = '❌ Failed';
                             button.style.background = 'var(--accent-red)';
-                            
+
                             setTimeout(() => {
                                 button.textContent = originalText;
                                 button.style.background = '';
                             }, 2000);
                         }
-                        
+
                         document.body.removeChild(textArea);
                     }
                 }
