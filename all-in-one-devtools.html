@@ -478,21 +478,347 @@
             margin-bottom: 24px;
         }
 
-        .diff-result {
-            background: var(--tertiary-bg);
+        /* GitHub-style diff viewer */
+        .diff-viewer {
             border: 1px solid var(--border-color);
             border-radius: 6px;
-            padding: 16px;
+            overflow: hidden;
+            margin-top: 24px;
+            background: var(--primary-bg);
+        }
+
+        .diff-header {
+            background: var(--secondary-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .diff-file-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .diff-file-icon {
+            color: var(--accent-blue);
+        }
+
+        .diff-content {
+            display: flex;
+            max-height: 600px;
+            overflow: auto;
             font-family: var(--font-mono);
-            font-size: 14px;
-            white-space: pre-wrap;
-            max-height: 400px;
-            overflow-y: auto;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .diff-line-numbers {
+            background: var(--secondary-bg);
+            color: var(--text-secondary);
+            padding: 0;
+            border-right: 1px solid var(--border-color);
+            user-select: none;
+            min-width: 80px;
+            flex-shrink: 0;
+        }
+
+        .diff-code {
+            flex: 1;
+            overflow-x: auto;
+        }
+
+        .diff-line {
+            display: flex;
+            width: 100%;
+            min-height: 20px;
             position: relative;
         }
 
-        .diff-result-with-copy {
-            padding-right: 60px;
+        .diff-line:hover {
+            background-color: rgba(177, 186, 196, 0.1);
+        }
+
+        .diff-line-number {
+            display: block;
+            width: 40px;
+            padding: 0 8px;
+            text-align: right;
+            color: var(--text-secondary);
+            font-size: 12px;
+            line-height: 20px;
+            border-right: 1px solid var(--border-color);
+            background: var(--secondary-bg);
+        }
+
+        .diff-line-content {
+            padding: 0 8px;
+            white-space: pre;
+            flex: 1;
+            line-height: 20px;
+            overflow-x: auto;
+        }
+
+        /* Addition styles */
+        .diff-line.added {
+            background-color: #0d4427;
+        }
+
+        .diff-line.added .diff-line-number {
+            background-color: #033a16;
+            color: #7ee787;
+        }
+
+        .diff-line.added .diff-line-content {
+            background-color: #0d4427;
+            color: #aff5b4;
+        }
+
+        .diff-line.added .diff-line-content::before {
+            content: '+';
+            color: #7ee787;
+            margin-right: 4px;
+        }
+
+        /* Deletion styles */
+        .diff-line.removed {
+            background-color: #67060c;
+        }
+
+        .diff-line.removed .diff-line-number {
+            background-color: #4a0d12;
+            color: #ffa198;
+        }
+
+        .diff-line.removed .diff-line-content {
+            background-color: #67060c;
+            color: #ffb3ba;
+        }
+
+        .diff-line.removed .diff-line-content::before {
+            content: '-';
+            color: #ffa198;
+            margin-right: 4px;
+        }
+
+        /* Unchanged styles */
+        .diff-line.context {
+            background-color: transparent;
+        }
+
+        .diff-line.context .diff-line-number {
+            background-color: var(--secondary-bg);
+            color: var(--text-secondary);
+        }
+
+        .diff-line.context .diff-line-content {
+            color: var(--text-primary);
+        }
+
+        .diff-line.context .diff-line-content::before {
+            content: ' ';
+            margin-right: 4px;
+        }
+
+        /* Empty line for alignment */
+        .diff-line.empty {
+            background-color: #21262d;
+        }
+
+        .diff-line.empty .diff-line-number {
+            background-color: var(--secondary-bg);
+            color: transparent;
+        }
+
+        .diff-line.empty .diff-line-content {
+            background-color: #21262d;
+        }
+
+        /* Unified diff view */
+        .diff-unified {
+            font-family: var(--font-mono);
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        /* Split view layout */
+        .diff-split-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            overflow: hidden;
+            margin-top: 24px;
+            background: var(--primary-bg);
+        }
+
+        .diff-split-side {
+            display: flex;
+            flex-direction: column;
+            max-height: 600px;
+            overflow: hidden;
+        }
+
+        .diff-split-side:first-child {
+            border-right: 1px solid var(--border-color);
+        }
+
+        .diff-split-header {
+            background: var(--secondary-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 8px 16px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .diff-split-content {
+            flex: 1;
+            overflow: auto;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .diff-split-line {
+            display: flex;
+            min-height: 20px;
+            position: relative;
+        }
+
+        .diff-split-line:hover {
+            background-color: rgba(177, 186, 196, 0.1);
+        }
+
+        .diff-split-line-number {
+            display: block;
+            width: 50px;
+            padding: 0 8px;
+            text-align: right;
+            color: var(--text-secondary);
+            font-size: 12px;
+            line-height: 20px;
+            border-right: 1px solid var(--border-color);
+            background: var(--secondary-bg);
+            flex-shrink: 0;
+        }
+
+        .diff-split-line-content {
+            padding: 0 8px;
+            white-space: pre;
+            flex: 1;
+            line-height: 20px;
+            overflow-x: auto;
+        }
+
+        /* Split view addition styles */
+        .diff-split-line.added {
+            background-color: #0d4427;
+        }
+
+        .diff-split-line.added .diff-split-line-number {
+            background-color: #033a16;
+            color: #7ee787;
+        }
+
+        .diff-split-line.added .diff-split-line-content {
+            background-color: #0d4427;
+            color: #aff5b4;
+        }
+
+        /* Split view deletion styles */
+        .diff-split-line.removed {
+            background-color: #67060c;
+        }
+
+        .diff-split-line.removed .diff-split-line-number {
+            background-color: #4a0d12;
+            color: #ffa198;
+        }
+
+        .diff-split-line.removed .diff-split-line-content {
+            background-color: #67060c;
+            color: #ffb3ba;
+        }
+
+        /* Split view unchanged styles */
+        .diff-split-line.context {
+            background-color: transparent;
+        }
+
+        .diff-split-line.context .diff-split-line-number {
+            background-color: var(--secondary-bg);
+            color: var(--text-secondary);
+        }
+
+        .diff-split-line.context .diff-split-line-content {
+            color: var(--text-primary);
+        }
+
+        /* Empty line for alignment in split view */
+        .diff-split-line.empty {
+            background-color: #21262d;
+        }
+
+        .diff-split-line.empty .diff-split-line-number {
+            background-color: var(--secondary-bg);
+            color: transparent;
+        }
+
+        .diff-split-line.empty .diff-split-line-content {
+            background-color: #21262d;
+        }
+
+        /* Unified view (existing styles) */
+        .diff-view-toggle {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .view-toggle-btn {
+            padding: 6px 12px;
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-secondary);
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .view-toggle-btn.active {
+            background: var(--accent-blue);
+            color: var(--primary-bg);
+            border-color: var(--accent-blue);
+        }
+
+        .view-toggle-btn:hover:not(.active) {
+            background: var(--hover-bg);
+            color: var(--text-primary);
+        }
+
+        /* Word-level diff highlighting */
+        .diff-word-added {
+            background-color: #238636;
+            color: #fff;
+            padding: 0 2px;
+            border-radius: 2px;
+        }
+
+        .diff-word-removed {
+            background-color: #da3633;
+            color: #fff;
+            padding: 0 2px;
+            border-radius: 2px;
         }
 
         .diff-stats {
@@ -522,16 +848,6 @@
 
         .stat-unchanged {
             color: var(--text-secondary);
-        }
-
-        .diff-added {
-            background-color: rgba(86, 211, 100, 0.2);
-            color: var(--accent-green);
-        }
-
-        .diff-removed {
-            background-color: rgba(248, 81, 73, 0.2);
-            color: var(--accent-red);
         }
 
         .generator-grid {
@@ -1200,7 +1516,8 @@
                                 Local Processing</span>
                         </div>
                     </div>
-                    <a href="https://github.com/dingjiayi/devtools" target="_blank" rel="noopener noreferrer" class="github-link">
+                    <a href="https://github.com/dingjiayi/devtools" target="_blank" rel="noopener noreferrer"
+                        class="github-link">
                         <span>⭐</span>
                         <span>GitHub</span>
                     </a>
@@ -1589,7 +1906,7 @@
                 <div v-show="currentTab === 'diff'" class="diff-compare">
                     <div class="page-header">
                         <h2>🔍 Diff Comparison</h2>
-                        <p>Text content difference comparison tool</p>
+                        <p>Side-by-side text content difference comparison tool</p>
                     </div>
 
                     <div class="diff-container">
@@ -1606,6 +1923,7 @@
                     <div class="button-group">
                         <button @click="compareDiff" class="success">🔍 Compare</button>
                         <button @click="clearDiff" class="secondary">🗑️ Clear</button>
+                        <button v-if="diffStats" @click="copyDiffResult($event)" class="primary">📋 Copy Diff</button>
                     </div>
 
                     <div v-if="diffStats" class="diff-stats">
@@ -1623,8 +1941,76 @@
                         </div>
                     </div>
 
-                    <div v-if="diffResult" class="diff-result diff-result-with-copy" v-html="diffResult">
-                        <button class="copy-btn" @click="copyDiffResult($event)">📋 Copy</button>
+                    <div v-if="diffStats" class="diff-view-toggle">
+                        <button class="view-toggle-btn" :class="{ active: diffViewMode === 'split' }"
+                            @click="diffViewMode = 'split'">
+                            Split View
+                        </button>
+                        <button class="view-toggle-btn" :class="{ active: diffViewMode === 'unified' }"
+                            @click="diffViewMode = 'unified'">
+                            Unified View
+                        </button>
+                    </div>
+
+                    <!-- Diff Results Display -->
+                    <div v-if="diffStats">
+                        <!-- Split View -->
+                        <div v-if="diffViewMode === 'split'" class="diff-split-container">
+                            <!-- Left Side (Original) -->
+                            <div class="diff-split-side">
+                                <div class="diff-split-header">
+                                    <span class="diff-file-icon">📄</span>
+                                    <span>Original</span>
+                                </div>
+                                <div class="diff-split-content">
+                                    <div v-for="(line, index) in diffResult.leftLines" :key="'left-' + index"
+                                        class="diff-split-line" :class="line.type">
+                                        <span class="diff-split-line-number">{{ line.lineNumber || '' }}</span>
+                                        <span class="diff-split-line-content" v-html="line.content"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Right Side (New) -->
+                            <div class="diff-split-side">
+                                <div class="diff-split-header">
+                                    <span class="diff-file-icon">📄</span>
+                                    <span>New</span>
+                                </div>
+                                <div class="diff-split-content">
+                                    <div v-for="(line, index) in diffResult.rightLines" :key="'right-' + index"
+                                        class="diff-split-line" :class="line.type">
+                                        <span class="diff-split-line-number">{{ line.lineNumber || '' }}</span>
+                                        <span class="diff-split-line-content" v-html="line.content"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Unified View -->
+                        <div v-else-if="diffViewMode === 'unified'" class="diff-viewer">
+                            <div class="diff-header">
+                                <div class="diff-file-header">
+                                    <span class="diff-file-icon">📄</span>
+                                    <span>Text Comparison</span>
+                                </div>
+                                <div>
+                                    <span v-if="diffStats">
+                                        <span class="stat-added">+{{ diffStats.added }}</span>
+                                        <span class="stat-removed">-{{ diffStats.removed }}</span>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="diff-content">
+                                <div class="diff-code">
+                                    <div v-for="(line, index) in diffResult.lines" :key="index" class="diff-line"
+                                        :class="line.type">
+                                        <span class="diff-line-number">{{ line.unifiedNumber || '' }}</span>
+                                        <span class="diff-line-content" v-html="line.content"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -1860,8 +2246,9 @@
                     // Diff Comparison
                     diffText1: '',
                     diffText2: '',
-                    diffResult: '',
+                    diffResult: { lines: [], leftLines: [], rightLines: [] },
                     diffStats: null,
+                    diffViewMode: 'split', // 'split' or 'unified'
 
                     // Format Conversion
                     currentConverterTab: 'json-to-yaml',
@@ -2556,52 +2943,209 @@
                     this.randomStringResult = '';
                 }, compareDiff() {
                     if (!this.diffText1 || !this.diffText2) {
-                        this.diffResult = 'Please enter two texts for comparison';
+                        this.diffResult = { lines: [], leftLines: [], rightLines: [] };
                         this.diffStats = null;
                         return;
                     }
 
-                    // Simple line-by-line diff comparison
-                    const lines1 = this.diffText1.split('\n');
-                    const lines2 = this.diffText2.split('\n');
-                    const maxLines = Math.max(lines1.length, lines2.length);
+                    // Use the diff library for more accurate comparison
+                    const diff = Diff.diffLines(this.diffText1, this.diffText2);
 
-                    let result = '';
+                    const lines = [];
+                    let oldLineNumber = 1;
+                    let newLineNumber = 1;
+                    let unifiedLineNumber = 1;
                     let stats = { added: 0, removed: 0, unchanged: 0 };
 
-                    for (let i = 0; i < maxLines; i++) {
-                        const line1 = lines1[i] || '';
-                        const line2 = lines2[i] || '';
-
-                        if (line1 === line2) {
-                            result += `  ${line1}\n`;
-                            if (line1) stats.unchanged++;
-                        } else {
-                            if (line1) {
-                                result += `<span class="diff-removed">- ${line1}</span>\n`;
-                                stats.removed++;
-                            }
-                            if (line2) {
-                                result += `<span class="diff-added">+ ${line2}</span>\n`;
-                                stats.added++;
-                            }
+                    diff.forEach(part => {
+                        const partLines = part.value.split('\n');
+                        // Remove the last empty line if exists
+                        if (partLines[partLines.length - 1] === '') {
+                            partLines.pop();
                         }
-                    }
 
-                    this.diffResult = result;
+                        partLines.forEach(lineContent => {
+                            const escapedContent = this.escapeHtml(lineContent);
+
+                            if (part.added) {
+                                // Added lines
+                                lines.push({
+                                    type: 'added',
+                                    content: escapedContent,
+                                    oldNumber: null,
+                                    newNumber: newLineNumber,
+                                    unifiedNumber: unifiedLineNumber
+                                });
+                                newLineNumber++;
+                                stats.added++;
+                            } else if (part.removed) {
+                                // Removed lines
+                                lines.push({
+                                    type: 'removed',
+                                    content: escapedContent,
+                                    oldNumber: oldLineNumber,
+                                    newNumber: null,
+                                    unifiedNumber: unifiedLineNumber
+                                });
+                                oldLineNumber++;
+                                stats.removed++;
+                            } else {
+                                // Unchanged lines
+                                lines.push({
+                                    type: 'context',
+                                    content: escapedContent,
+                                    oldNumber: oldLineNumber,
+                                    newNumber: newLineNumber,
+                                    unifiedNumber: unifiedLineNumber
+                                });
+                                oldLineNumber++;
+                                newLineNumber++;
+                                stats.unchanged++;
+                            }
+                            unifiedLineNumber++;
+                        });
+                    });
+
+                    // Apply word-level diff for better visualization
+                    this.applyWordDiff(lines);
+
+                    // Generate split view data
+                    const { leftLines, rightLines } = this.generateSplitViewData(lines);
+
+                    this.diffResult = { lines, leftLines, rightLines };
                     this.diffStats = stats;
                 },
 
+                generateSplitViewData(unifiedLines) {
+                    const leftLines = [];
+                    const rightLines = [];
+
+                    unifiedLines.forEach(line => {
+                        if (line.type === 'removed') {
+                            // Add to left side only
+                            leftLines.push({
+                                type: 'removed',
+                                content: line.content,
+                                lineNumber: line.oldNumber
+                            });
+                            // Add empty line to right side for alignment
+                            rightLines.push({
+                                type: 'empty',
+                                content: '',
+                                lineNumber: null
+                            });
+                        } else if (line.type === 'added') {
+                            // Add empty line to left side for alignment
+                            leftLines.push({
+                                type: 'empty',
+                                content: '',
+                                lineNumber: null
+                            });
+                            // Add to right side only
+                            rightLines.push({
+                                type: 'added',
+                                content: line.content,
+                                lineNumber: line.newNumber
+                            });
+                        } else {
+                            // Context lines appear on both sides
+                            leftLines.push({
+                                type: 'context',
+                                content: line.content,
+                                lineNumber: line.oldNumber
+                            });
+                            rightLines.push({
+                                type: 'context',
+                                content: line.content,
+                                lineNumber: line.newNumber
+                            });
+                        }
+                    });
+
+                    return { leftLines, rightLines };
+                },
+
+                applyWordDiff(lines) {
+                    // Group consecutive changed lines for word-level diff
+                    for (let i = 0; i < lines.length; i++) {
+                        const currentLine = lines[i];
+
+                        if (currentLine.type === 'removed') {
+                            // Look for the next added line
+                            for (let j = i + 1; j < lines.length; j++) {
+                                const nextLine = lines[j];
+
+                                if (nextLine.type === 'added') {
+                                    // Apply word-level diff between removed and added lines
+                                    const wordDiff = Diff.diffWords(currentLine.content, nextLine.content);
+
+                                    let removedContent = '';
+                                    let addedContent = '';
+
+                                    wordDiff.forEach(part => {
+                                        if (part.added) {
+                                            addedContent += `<span class="diff-word-added">${this.escapeHtml(part.value)}</span>`;
+                                        } else if (part.removed) {
+                                            removedContent += `<span class="diff-word-removed">${this.escapeHtml(part.value)}</span>`;
+                                        } else {
+                                            const escaped = this.escapeHtml(part.value);
+                                            removedContent += escaped;
+                                            addedContent += escaped;
+                                        }
+                                    });
+
+                                    currentLine.content = removedContent;
+                                    nextLine.content = addedContent;
+                                    break;
+                                } else if (nextLine.type === 'context') {
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                },
+
+                escapeHtml(text) {
+                    const map = {
+                        '&': '&amp;',
+                        '<': '&lt;',
+                        '>': '&gt;',
+                        '"': '&quot;',
+                        "'": '&#039;'
+                    };
+                    return text.replace(/[&<>"']/g, function (m) { return map[m]; });
+                },
+
                 copyDiffResult(event) {
-                    // Copy plain text version (remove HTML tags)
-                    const plainText = this.diffResult.replace(/<[^>]*>/g, '');
-                    this.copyToClipboard(plainText, event);
+                    // Create a comprehensive diff result in unified format
+                    const lines1 = this.diffText1.split('\n');
+                    const lines2 = this.diffText2.split('\n');
+                    const diff = Diff.diffLines(this.diffText1, this.diffText2);
+
+                    let unifiedDiff = `--- Original\n+++ New\n`;
+
+                    diff.forEach(part => {
+                        const lines = part.value.split('\n');
+                        if (lines[lines.length - 1] === '') lines.pop();
+
+                        lines.forEach(line => {
+                            if (part.added) {
+                                unifiedDiff += `+${line}\n`;
+                            } else if (part.removed) {
+                                unifiedDiff += `-${line}\n`;
+                            } else {
+                                unifiedDiff += ` ${line}\n`;
+                            }
+                        });
+                    });
+
+                    this.copyToClipboard(unifiedDiff, event);
                 },
 
                 clearDiff() {
                     this.diffText1 = '';
                     this.diffText2 = '';
-                    this.diffResult = '';
+                    this.diffResult = { lines: [], leftLines: [], rightLines: [] };
                     this.diffStats = null;
                 },
 
