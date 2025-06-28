@@ -1962,7 +1962,7 @@
                                     <span class="diff-file-icon">📄</span>
                                     <span>Original</span>
                                 </div>
-                                <div class="diff-split-content">
+                                <div class="diff-split-content" ref="leftSplitContent" @scroll="onLeftScrollSync">
                                     <div v-for="(line, index) in diffResult.leftLines" :key="'left-' + index"
                                         class="diff-split-line" :class="line.type">
                                         <span class="diff-split-line-number">{{ line.lineNumber || '' }}</span>
@@ -1977,7 +1977,7 @@
                                     <span class="diff-file-icon">📄</span>
                                     <span>New</span>
                                 </div>
-                                <div class="diff-split-content">
+                                <div class="diff-split-content" ref="rightSplitContent" @scroll="onRightScrollSync">
                                     <div v-for="(line, index) in diffResult.rightLines" :key="'right-' + index"
                                         class="diff-split-line" :class="line.type">
                                         <span class="diff-split-line-number">{{ line.lineNumber || '' }}</span>
@@ -2249,6 +2249,7 @@
                     diffResult: { lines: [], leftLines: [], rightLines: [] },
                     diffStats: null,
                     diffViewMode: 'split', // 'split' or 'unified'
+                    isScrollSyncing: false, // Flag to prevent infinite scroll sync loop
 
                     // Format Conversion
                     currentConverterTab: 'json-to-yaml',
@@ -3147,6 +3148,43 @@
                     this.diffText2 = '';
                     this.diffResult = { lines: [], leftLines: [], rightLines: [] };
                     this.diffStats = null;
+                },
+
+                // Synchronized scrolling methods for split view
+                onLeftScrollSync(event) {
+                    if (this.isScrollSyncing) return;
+                    this.isScrollSyncing = true;
+
+                    const leftContent = event.target;
+                    const rightContent = this.$refs.rightSplitContent;
+
+                    if (rightContent) {
+                        rightContent.scrollTop = leftContent.scrollTop;
+                        rightContent.scrollLeft = leftContent.scrollLeft;
+                    }
+
+                    // Use requestAnimationFrame to reset the flag after the scroll sync is complete
+                    requestAnimationFrame(() => {
+                        this.isScrollSyncing = false;
+                    });
+                },
+
+                onRightScrollSync(event) {
+                    if (this.isScrollSyncing) return;
+                    this.isScrollSyncing = true;
+
+                    const rightContent = event.target;
+                    const leftContent = this.$refs.leftSplitContent;
+
+                    if (leftContent) {
+                        leftContent.scrollTop = rightContent.scrollTop;
+                        leftContent.scrollLeft = rightContent.scrollLeft;
+                    }
+
+                    // Use requestAnimationFrame to reset the flag after the scroll sync is complete
+                    requestAnimationFrame(() => {
+                        this.isScrollSyncing = false;
+                    });
                 },
 
                 getConverterPlaceholder() {
