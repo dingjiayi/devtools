@@ -2966,7 +2966,7 @@
                         }
 
                         partLines.forEach(lineContent => {
-                            const escapedContent = this.escapeHtml(lineContent);
+                            const escapedContent = this.escapeHtmlForDiff(lineContent);
 
                             if (part.added) {
                                 // Added lines
@@ -3085,11 +3085,11 @@
 
                                     wordDiff.forEach(part => {
                                         if (part.added) {
-                                            addedContent += `<span class="diff-word-added">${this.escapeHtml(part.value)}</span>`;
+                                            addedContent += `<span class="diff-word-added">${this.escapeHtmlForDiff(part.value)}</span>`;
                                         } else if (part.removed) {
-                                            removedContent += `<span class="diff-word-removed">${this.escapeHtml(part.value)}</span>`;
+                                            removedContent += `<span class="diff-word-removed">${this.escapeHtmlForDiff(part.value)}</span>`;
                                         } else {
-                                            const escaped = this.escapeHtml(part.value);
+                                            const escaped = this.escapeHtmlForDiff(part.value);
                                             removedContent += escaped;
                                             addedContent += escaped;
                                         }
@@ -3115,6 +3115,27 @@
                         "'": '&#039;'
                     };
                     return text.replace(/[&<>"']/g, function (m) { return map[m]; });
+                },
+
+                // Escape HTML but preserve quotes for diff display
+                escapeHtmlForDiff(text) {
+                    const map = {
+                        '&': '&amp;',
+                        '<': '&lt;',
+                        '>': '&gt;'
+                    };
+                    return text.replace(/[&<>]/g, function (m) { return map[m]; });
+                },
+
+                escapeHtmlForDiff(text) {
+                    // For diff display, we only escape < and > to prevent HTML injection
+                    // but keep quotes as they are for better readability
+                    const map = {
+                        '&': '&amp;',
+                        '<': '&lt;',
+                        '>': '&gt;'
+                    };
+                    return text.replace(/[&<>]/g, function (m) { return map[m]; });
                 },
 
                 copyDiffResult(event) {
