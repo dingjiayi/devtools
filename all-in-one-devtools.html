@@ -1497,6 +1497,104 @@
             border-color: var(--accent-purple);
             color: var(--accent-purple);
         }
+
+        /* Error highlighting styles for formatter */
+        .formatter-input-container {
+            position: relative;
+        }
+
+        .formatter-input-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            padding: 12px;
+            font-family: var(--font-mono);
+            font-size: 14px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow: hidden;
+            color: transparent;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 6px;
+            z-index: 1;
+        }
+
+        .formatter-input-overlay .error-highlight {
+            background-color: rgba(248, 81, 73, 0.3);
+            border: 1px solid var(--accent-red);
+            border-radius: 3px;
+            position: relative;
+        }
+
+        .formatter-input-overlay .error-highlight::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--accent-red);
+            border-radius: 1px;
+            animation: errorPulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes errorPulse {
+
+            0%,
+            100% {
+                opacity: 0.6;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        .formatter-textarea {
+            position: relative;
+            z-index: 2;
+            background: transparent !important;
+        }
+
+        .error-info {
+            background: rgba(248, 81, 73, 0.1);
+            border: 1px solid var(--accent-red);
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 8px;
+            color: var(--accent-red);
+            font-size: 13px;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .error-info .error-icon {
+            color: var(--accent-red);
+            font-size: 16px;
+            margin-top: 1px;
+            flex-shrink: 0;
+        }
+
+        .error-info .error-details {
+            flex: 1;
+        }
+
+        .error-info .error-message {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .error-info .error-location {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-family: var(--font-mono);
+        }
     </style>
 </head>
 
@@ -1719,8 +1817,24 @@
                     <div class="tool-card">
                         <div class="form-group">
                             <label>Input Content:</label>
-                            <textarea v-model="formatterInput" :placeholder="getFormatterPlaceholder()"
-                                rows="10"></textarea>
+                            <div class="formatter-input-container">
+                                <div class="formatter-input-overlay" v-if="formatterError && formatterError.position"
+                                    v-html="getHighlightedInput()"></div>
+                                <textarea v-model="formatterInput" :placeholder="getFormatterPlaceholder()"
+                                    :class="{ 'formatter-textarea': formatterError && formatterError.position }"
+                                    rows="10" @input="clearFormatterError"></textarea>
+                            </div>
+                            <div v-if="formatterError" class="error-info">
+                                <span class="error-icon">⚠️</span>
+                                <div class="error-details">
+                                    <div class="error-message">{{ formatterError.message }}</div>
+                                    <div v-if="formatterError.position" class="error-location">
+                                        Line {{ formatterError.position.line }}, Column {{
+                                        formatterError.position.column }}
+                                        (Position {{ formatterError.position.index }})
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <button @click="formatContent" class="success">✨ Format</button>
                         <button @click="minifyContent" class="secondary">📦 Minify</button>
@@ -1728,7 +1842,7 @@
                         <button @click="clearFormatter" class="danger">🗑️ Clear</button>
 
                         <!-- Results Display Area -->
-                        <div v-if="formatterResult">
+                        <div v-if="formatterResult && !formatterError">
                             <!-- View toggle buttons -->
                             <div class="view-toggle"
                                 v-if="formatterParsedData && (currentFormatterTab === 'json' || currentFormatterTab === 'yaml')">
@@ -1747,9 +1861,9 @@
                                 v-if="formatterParsedData && (currentFormatterTab === 'json' || currentFormatterTab === 'yaml')">
                                 <input v-model="searchQuery" @input="searchInData"
                                     @keydown.enter.prevent="nextSearchResult" class="search-input" :class="{
-                                        'has-results': searchQuery && searchResults.length > 0,
-                                        'no-results': searchQuery && searchResults.length === 0
-                                    }" placeholder="🔍 Search keys or values..." type="text" />
+                                                'has-results': searchQuery && searchResults.length > 0,
+                                                'no-results': searchQuery && searchResults.length === 0
+                                            }" placeholder="🔍 Search keys or values..." type="text" />
                                 <div class="search-stats" :class="{ 'no-results': searchResults.length === 0 }"
                                     v-if="searchQuery">
                                     {{ searchResults.length > 0 ? `${currentSearchIndex + 1}/${searchResults.length}` :
@@ -2215,6 +2329,7 @@
                     formatterResult: '',
                     formatterViewMode: 'text', // 'text' or 'tree'
                     formatterParsedData: null,
+                    formatterError: null, // Store error information with position
                     // Search functionality
                     searchQuery: '',
                     searchResults: [],
@@ -2479,6 +2594,8 @@
                 formatContent() {
                     if (!this.formatterInput) return;
 
+                    this.formatterError = null; // Clear previous errors
+
                     try {
                         if (this.currentFormatterTab === 'json') {
                             const parsed = JSON.parse(this.formatterInput);
@@ -2501,13 +2618,20 @@
                             }
                         }
                     } catch (e) {
-                        this.formatterResult = 'Format failed: ' + e.message;
+                        const position = this.parseErrorPosition(e.message, this.formatterInput);
+                        this.formatterError = {
+                            message: e.message,
+                            position: position
+                        };
+                        this.formatterResult = ''; // Clear result on error
                         this.formatterParsedData = null;
                     }
                 },
 
                 minifyContent() {
                     if (!this.formatterInput) return;
+
+                    this.formatterError = null; // Clear previous errors
 
                     try {
                         if (this.currentFormatterTab === 'json') {
@@ -2528,10 +2652,17 @@
                             }
                         }
                     } catch (e) {
-                        this.formatterResult = 'Minify failed: ' + e.message;
+                        const position = this.parseErrorPosition(e.message, this.formatterInput);
+                        this.formatterError = {
+                            message: e.message,
+                            position: position
+                        };
+                        this.formatterResult = ''; // Clear result on error
                     }
                 }, validateContent() {
                     if (!this.formatterInput) return;
+
+                    this.formatterError = null; // Clear previous errors
 
                     try {
                         if (this.currentFormatterTab === 'json') {
@@ -2546,7 +2677,12 @@
                             }
                         }
                     } catch (e) {
-                        this.formatterResult = '❌ Invalid format: ' + e.message;
+                        const position = this.parseErrorPosition(e.message, this.formatterInput);
+                        this.formatterError = {
+                            message: e.message,
+                            position: position
+                        };
+                        this.formatterResult = ''; // Clear result on error
                     }
                 },
 
@@ -2555,9 +2691,95 @@
                     this.formatterResult = '';
                     this.formatterParsedData = null;
                     this.formatterViewMode = 'text';
+                    this.formatterError = null;
                     this.searchQuery = '';
                     this.searchResults = [];
                     this.currentSearchIndex = -1;
+                },
+
+                clearFormatterError() {
+                    this.formatterError = null;
+                },
+
+                parseErrorPosition(errorMessage, inputText) {
+                    // Parse JSON error messages
+                    const jsonPositionMatch = errorMessage.match(/at position (\d+)/);
+                    const jsonLineColumnMatch = errorMessage.match(/line (\d+) column (\d+)/);
+
+                    if (jsonPositionMatch) {
+                        const position = parseInt(jsonPositionMatch[1]);
+                        const lineColumn = this.getLineColumnFromPosition(inputText, position);
+                        return {
+                            index: position,
+                            line: lineColumn.line,
+                            column: lineColumn.column
+                        };
+                    }
+
+                    if (jsonLineColumnMatch) {
+                        const line = parseInt(jsonLineColumnMatch[1]);
+                        const column = parseInt(jsonLineColumnMatch[2]);
+                        const position = this.getPositionFromLineColumn(inputText, line, column);
+                        return {
+                            index: position,
+                            line: line,
+                            column: column
+                        };
+                    }
+
+                    // Parse YAML error messages
+                    const yamlLineMatch = errorMessage.match(/at line (\d+), column (\d+)/);
+                    if (yamlLineMatch) {
+                        const line = parseInt(yamlLineMatch[1]);
+                        const column = parseInt(yamlLineMatch[2]);
+                        const position = this.getPositionFromLineColumn(inputText, line, column);
+                        return {
+                            index: position,
+                            line: line,
+                            column: column
+                        };
+                    }
+
+                    return null;
+                },
+
+                getLineColumnFromPosition(text, position) {
+                    const lines = text.substring(0, position).split('\n');
+                    return {
+                        line: lines.length,
+                        column: lines[lines.length - 1].length + 1
+                    };
+                },
+
+                getPositionFromLineColumn(text, line, column) {
+                    const lines = text.split('\n');
+                    let position = 0;
+
+                    for (let i = 0; i < line - 1 && i < lines.length; i++) {
+                        position += lines[i].length + 1; // +1 for newline character
+                    }
+
+                    position += Math.max(0, column - 1);
+                    return position;
+                },
+
+                getHighlightedInput() {
+                    if (!this.formatterError || !this.formatterError.position || !this.formatterInput) {
+                        return '';
+                    }
+
+                    const input = this.formatterInput;
+                    const pos = this.formatterError.position.index;
+
+                    // Highlight a reasonable range around the error position
+                    const start = Math.max(0, pos - 1);
+                    const end = Math.min(input.length, pos + 10);
+
+                    const before = this.escapeHtml(input.substring(0, start));
+                    const error = this.escapeHtml(input.substring(start, end));
+                    const after = this.escapeHtml(input.substring(end));
+
+                    return before + '<span class="error-highlight">' + error + '</span>' + after;
                 },
 
                 renderTreeView(data, level = 0) {
