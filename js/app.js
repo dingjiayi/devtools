@@ -8,6 +8,7 @@ const { createApp } = Vue;
 createApp({
     data() {
         return {
+            currentTheme: localStorage.getItem('devtools-theme') || 'dark',
             currentTab: 'time',
             menuItems: [
                 { id: 'time', name: 'Time Conversion', icon: '🕐' },
@@ -143,7 +144,20 @@ createApp({
         }
     },
 
+    computed: {
+        currentMenuItem() {
+            return this.menuItems.find(item => item.id === this.currentTab) || this.menuItems[0];
+        }
+    },
+
     methods: {
+        // === Theme ===
+        setTheme(theme) {
+            this.currentTheme = theme;
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('devtools-theme', theme);
+        },
+
         // === Navigation ===
         setCurrentTab(tab) {
             this.currentTab = tab;
@@ -1227,6 +1241,9 @@ createApp({
     },
 
     mounted() {
+        // Initialize theme
+        document.documentElement.setAttribute('data-theme', this.currentTheme);
+
         this.updateTime();
         setInterval(this.updateTime, 1000);
 

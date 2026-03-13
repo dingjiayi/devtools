@@ -31,6 +31,11 @@
                         <span>⭐</span>
                         <span>GitHub</span>
                     </a>
+                    <div class="theme-switcher">
+                        <button class="theme-btn" :class="{ active: currentTheme === 'dark' }" @click="setTheme('dark')" title="Dark">🌙</button>
+                        <button class="theme-btn" :class="{ active: currentTheme === 'light' }" @click="setTheme('light')" title="Light">☀️</button>
+                        <button class="theme-btn" :class="{ active: currentTheme === 'nord' }" @click="setTheme('nord')" title="Nord">❄️</button>
+                    </div>
                 </div>
 
                 <div class="nav-menu">
@@ -49,7 +54,22 @@
 
             <!-- Main Content Area -->
             <main class="main-content">
+                <!-- Top Bar -->
+                <div class="top-bar">
+                    <div class="breadcrumb">
+                        <span>⚡ DevTools</span>
+                        <span class="breadcrumb-separator">/</span>
+                        <span class="breadcrumb-current">{{ currentMenuItem.icon }} {{ currentMenuItem.name }}</span>
+                    </div>
+                    <div class="top-bar-actions">
+                        <div class="top-bar-badge">
+                            <span>🔒</span>
+                            <span>Local Only</span>
+                        </div>
+                    </div>
+                </div>
 
+                <div class="content-body">
                 <!-- Time Conversion -->
                 <div v-show="currentTab === 'time'" class="time-converter">
                     <div class="page-header">
@@ -659,6 +679,7 @@
                     </div>
                 </div>
 
+                </div><!-- end content-body -->
             </main>
         </div>
     </div>
