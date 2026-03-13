@@ -1,12 +1,669 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-    <meta http-equiv="refresh" content="0; url=all-in-one-devtools.html">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevTools - Developer Tool Collection</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://unpkg.com/crypto-js@4.2.0/crypto-js.js"></script>
+    <script src="https://unpkg.com/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+    <script src="https://unpkg.com/diff@5.1.0/dist/diff.min.js"></script>
 </head>
 
 <body>
-    <p>Redirecting to <a href="all-in-one-devtools.html">All-in-One DevTools</a></p>
+    <div id="app">
+        <div class="app">
+            <!-- Sidebar -->
+            <nav class="sidebar">
+                <div class="logo">
+                    <h1>⚡ DevTools</h1>
+                    <p>Developer Tool Collection</p>
+                    <div class="security-badge">
+                        <span>🔒</span>
+                        <span>100% Local Processing</span>
+                    </div>
+                    <a href="https://github.com/dingjiayi/devtools" target="_blank" rel="noopener noreferrer"
+                        class="github-link">
+                        <span>⭐</span>
+                        <span>GitHub</span>
+                    </a>
+                </div>
+
+                <div class="nav-menu">
+                    <div v-for="item in menuItems" :key="item.id" class="nav-item"
+                        :class="{ active: currentTab === item.id }" @click="setCurrentTab(item.id)">
+                        <span class="icon">{{ item.icon }}</span>
+                        <span class="text">{{ item.name }}</span>
+                    </div>
+                </div>
+
+                <div class="footer">
+                    <p>v1.1.0</p>
+                    <p>🔒 100% Local Processing</p>
+                </div>
+            </nav>
+
+            <!-- Main Content Area -->
+            <main class="main-content">
+
+                <!-- Time Conversion -->
+                <div v-show="currentTab === 'time'" class="time-converter">
+                    <div class="page-header">
+                        <h2>🕐 Time Conversion</h2>
+                        <p>Timestamp and local time conversion tool</p>
+                    </div>
+
+                    <div class="tools-grid">
+                        <div class="tool-card">
+                            <h3>📅 Current Timestamp</h3>
+                            <div class="current-time">
+                                <span>Unix Timestamp (seconds):</span>
+                                <span class="time-value" @click="copyToClipboard(currentTimestamp, $event)">{{
+                                    currentTimestamp }}</span>
+                            </div>
+                            <div class="current-time">
+                                <span>Current Time:</span>
+                                <span class="time-value">{{ currentTime }}</span>
+                            </div>
+                        </div>
+
+                        <div class="tool-card">
+                            <h3>⏰ Timestamp to Local Time</h3>
+                            <div class="form-group">
+                                <label>Timestamp (seconds):</label>
+                                <input v-model="timestampInput" placeholder="Enter timestamp in seconds"
+                                    @input="convertTimestamp">
+                            </div>
+                            <div class="form-group">
+                                <label>Timezone:</label>
+                                <select v-model="selectedTimezone" @change="convertTimestamp">
+                                    <option value="Asia/Hong_Kong">Hong Kong (GMT+8)</option>
+                                    <option value="Asia/Shanghai">Shanghai (GMT+8)</option>
+                                    <option value="Asia/Tokyo">Tokyo (GMT+9)</option>
+                                    <option value="America/New_York">New York (GMT-5/-4)</option>
+                                    <option value="Europe/London">London (GMT+0/+1)</option>
+                                    <option value="UTC">UTC (GMT+0)</option>
+                                </select>
+                            </div>
+                            <div v-if="convertedTime" class="result-box result-box-with-copy">
+                                {{ convertedTime }}
+                                <button class="copy-btn" @click="copyToClipboard(convertedTime, $event)">📋
+                                    Copy</button>
+                            </div>
+                        </div>
+
+                        <div class="tool-card">
+                            <h3>📆 Local Time to Timestamp</h3>
+                            <div class="form-group">
+                                <label>Date Time:</label>
+                                <input v-model="datetimeInput" type="datetime-local" step="1"
+                                    @input="convertToTimestamp">
+                            </div>
+                            <div v-if="convertedTimestamp" class="result-box">
+                                <div style="margin-bottom: 8px;">
+                                    <strong>Unix Timestamp (seconds):</strong> {{ convertedTimestamp.seconds }}
+                                </div>
+                                <button class="copy-btn" style="position: static; margin: 0;"
+                                    @click="copyToClipboard(`Unix Timestamp (seconds): ${convertedTimestamp.seconds}`, $event)">📋
+                                    Copy</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Encoding/Decoding -->
+                <div v-show="currentTab === 'encoder'" class="encoder-decoder">
+                    <div class="page-header">
+                        <h2>🔐 Encoding/Decoding</h2>
+                        <p>Base64, URL, JWT encoding and decoding tools</p>
+                    </div>
+
+                    <div class="encoder-tabs">
+                        <button v-for="tab in encoderTabs" :key="tab.id" class="encoder-tab"
+                            :class="{ active: currentEncoderTab === tab.id }" @click="currentEncoderTab = tab.id">
+                            {{ tab.name }}
+                        </button>
+                    </div>
+
+                    <div class="encoder-content">
+                        <!-- Base64 -->
+                        <div v-show="currentEncoderTab === 'base64'" class="tool-card">
+                            <h3>🔢 Base64 Encoding/Decoding</h3>
+                            <div class="form-group">
+                                <label>Original Text:</label>
+                                <textarea v-model="base64Input" placeholder="Enter text to encode/decode"
+                                    rows="6"></textarea>
+                            </div>
+                            <div class="button-group">
+                                <button @click="encodeBase64">🔐 Encode</button>
+                                <button @click="decodeBase64" class="secondary">🔓 Decode</button>
+                                <button @click="clearBase64" class="danger">🗑️ Clear</button>
+                            </div>
+                            <div v-if="base64Result" class="result-box result-box-with-copy">
+                                {{ base64Result }}
+                                <button class="copy-btn" @click="copyToClipboard(base64Result, $event)">📋 Copy</button>
+                            </div>
+                        </div>
+
+                        <!-- URL -->
+                        <div v-show="currentEncoderTab === 'url'" class="tool-card">
+                            <h3>🔗 URL Encoding/Decoding</h3>
+                            <div class="form-group">
+                                <label>URL Text:</label>
+                                <textarea v-model="urlInput" placeholder="Enter URL or text" rows="6"></textarea>
+                            </div>
+                            <div class="button-group">
+                                <button @click="encodeUrl">🔐 Encode</button>
+                                <button @click="decodeUrl" class="secondary">🔓 Decode</button>
+                                <button @click="clearUrl" class="danger">🗑️ Clear</button>
+                            </div>
+                            <div v-if="urlResult" class="result-box result-box-with-copy">
+                                {{ urlResult }}
+                                <button class="copy-btn" @click="copyToClipboard(urlResult, $event)">📋 Copy</button>
+                            </div>
+                        </div>
+
+                        <!-- JWT -->
+                        <div v-show="currentEncoderTab === 'jwt'" class="tool-card">
+                            <h3>🎫 JWT Decoding</h3>
+                            <div class="form-group">
+                                <label>JWT Token:</label>
+                                <textarea v-model="jwtInput" placeholder="Enter JWT Token" rows="6"></textarea>
+                            </div>
+                            <div class="button-group">
+                                <button @click="decodeJWT">🔓 Decode</button>
+                                <button @click="clearJWT" class="danger">🗑️ Clear</button>
+                            </div>
+                            <div v-if="jwtResult" class="result-box result-box-with-copy">
+                                {{ jwtResult }}
+                                <button class="copy-btn" @click="copyToClipboard(jwtResult, $event)">📋 Copy</button>
+                            </div>
+                        </div>
+
+                        <!-- Unicode -->
+                        <div v-show="currentEncoderTab === 'unicode'" class="tool-card">
+                            <h3>🔤 Unicode Encoding/Decoding</h3>
+                            <div class="form-group">
+                                <label>Original Text:</label>
+                                <textarea v-model="unicodeInput" placeholder="Enter text to encode/decode"
+                                    rows="6"></textarea>
+                            </div>
+                            <div class="button-group">
+                                <button @click="encodeUnicode">🔐 Encode</button>
+                                <button @click="decodeUnicode" class="secondary">🔓 Decode</button>
+                                <button @click="clearUnicode" class="danger">🗑️ Clear</button>
+                            </div>
+                            <div v-if="unicodeResult" class="result-box result-box-with-copy">
+                                {{ unicodeResult }}
+                                <button class="copy-btn" @click="copyToClipboard(unicodeResult, $event)">📋
+                                    Copy</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Formatting Tools -->
+                <div v-show="currentTab === 'formatter'" class="formatter">
+                    <div class="page-header">
+                        <h2>📝 Formatting Tools</h2>
+                        <p>JSON, YAML formatting and beautification</p>
+                    </div>
+
+                    <div class="encoder-tabs">
+                        <button v-for="tab in formatterTabs" :key="tab.id" class="encoder-tab"
+                            :class="{ active: currentFormatterTab === tab.id }" @click="currentFormatterTab = tab.id">
+                            {{ tab.name }}
+                        </button>
+                    </div>
+
+                    <div class="tool-card">
+                        <div class="form-group">
+                            <label>Input Content:</label>
+                            <div class="formatter-input-container">
+                                <div class="formatter-input-overlay" v-if="formatterError && formatterError.position"
+                                    v-html="getHighlightedInput()"></div>
+                                <textarea v-model="formatterInput" :placeholder="getFormatterPlaceholder()"
+                                    :class="{ 'formatter-textarea': formatterError && formatterError.position }"
+                                    rows="10" @input="clearFormatterError"></textarea>
+                            </div>
+                            <div v-if="formatterError" class="error-info">
+                                <span class="error-icon">⚠️</span>
+                                <div class="error-details">
+                                    <div class="error-message">{{ formatterError.message }}</div>
+                                    <div v-if="formatterError.position" class="error-location">
+                                        Line {{ formatterError.position.line }}, Column {{
+                                        formatterError.position.column }}
+                                        (Position {{ formatterError.position.index }})
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button @click="formatContent" class="success">✨ Format</button>
+                        <button @click="minifyContent" class="secondary">📦 Minify</button>
+                        <button @click="validateContent">✅ Validate</button>
+                        <button @click="clearFormatter" class="danger">🗑️ Clear</button>
+
+                        <div v-if="formatterResult && !formatterError">
+                            <div class="view-toggle"
+                                v-if="formatterParsedData && (currentFormatterTab === 'json' || currentFormatterTab === 'yaml')">
+                                <button :class="{ active: formatterViewMode === 'text' }"
+                                    @click="formatterViewMode = 'text'">
+                                    📝 Text
+                                </button>
+                                <button :class="{ active: formatterViewMode === 'tree' }"
+                                    @click="formatterViewMode = 'tree'">
+                                    🌳 Tree
+                                </button>
+                            </div>
+
+                            <div class="search-container"
+                                v-if="formatterParsedData && (currentFormatterTab === 'json' || currentFormatterTab === 'yaml')">
+                                <input v-model="searchQuery" @input="searchInData"
+                                    @keydown.enter.prevent="nextSearchResult" class="search-input" :class="{
+                                        'has-results': searchQuery && searchResults.length > 0,
+                                        'no-results': searchQuery && searchResults.length === 0
+                                    }" placeholder="🔍 Search keys or values..." type="text" />
+                                <div class="search-stats" :class="{ 'no-results': searchResults.length === 0 }"
+                                    v-if="searchQuery">
+                                    {{ searchResults.length > 0 ? `${currentSearchIndex + 1}/${searchResults.length}` :
+                                    'No results' }}
+                                </div>
+                                <div class="search-navigation" v-if="searchResults.length > 0">
+                                    <button class="search-nav-btn" @click="previousSearchResult"
+                                        :disabled="searchResults.length === 0">↑</button>
+                                    <button class="search-nav-btn" @click="nextSearchResult"
+                                        :disabled="searchResults.length === 0">↓</button>
+                                </div>
+                            </div>
+
+                            <div v-show="formatterViewMode === 'text'" class="result-box result-box-with-copy">
+                                <div v-html="highlightSearchInText(formatterResult)"></div>
+                                <button class="copy-btn" @click="copyToClipboard(formatterResult, $event)">📋
+                                    Copy</button>
+                            </div>
+
+                            <div v-show="formatterViewMode === 'tree' && formatterParsedData" class="tree-viewer">
+                                <div v-html="renderTreeViewWithSearch(formatterParsedData)"></div>
+                                <button class="copy-btn" @click="copyToClipboard(formatterResult, $event)">📋
+                                    Copy</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Generators -->
+                <div v-show="currentTab === 'generator'" class="generator">
+                    <div class="page-header">
+                        <h2>⚙️ Generators</h2>
+                        <p>Hash, UUID, password, random string generation tools</p>
+                    </div>
+
+                    <div class="encoder-tabs">
+                        <button v-for="tab in generatorTabs" :key="tab.id" class="encoder-tab"
+                            :class="{ active: currentGeneratorTab === tab.id }" @click="currentGeneratorTab = tab.id">
+                            {{ tab.name }}
+                        </button>
+                    </div>
+
+                    <div class="encoder-content">
+                        <!-- Hash Generator -->
+                        <div v-show="currentGeneratorTab === 'hash'" class="tool-card">
+                            <h3>🔒 Hash Generator</h3>
+                            <div class="form-group">
+                                <label>Input Text:</label>
+                                <textarea v-model="hashInput" placeholder="Enter text to generate hash"
+                                    rows="6"></textarea>
+                            </div>
+                            <div class="button-group">
+                                <button @click="generateHash('MD5')">MD5</button>
+                                <button @click="generateHash('SHA1')">SHA1</button>
+                                <button @click="generateHash('SHA256')">SHA256</button>
+                                <button @click="generateHash('SHA512')">SHA512</button>
+                                <button @click="clearHash" class="danger">🗑️ Clear</button>
+                            </div>
+                            <div v-if="hashResult" class="result-box result-box-with-copy">
+                                {{ hashResult }}
+                                <button class="copy-btn" @click="copyToClipboard(hashResult, $event)">📋 Copy</button>
+                            </div>
+                        </div>
+
+                        <!-- UUID Generator -->
+                        <div v-show="currentGeneratorTab === 'uuid'" class="tool-card">
+                            <h3>🆔 UUID Generator</h3>
+                            <div class="button-group">
+                                <button @click="generateUUID">🎲 Generate UUID</button>
+                                <button @click="generateMultipleUUID" class="secondary">🎲 Generate 10</button>
+                                <button @click="clearUUID" class="danger">🗑️ Clear</button>
+                            </div>
+                            <div v-if="uuidResult" class="result-box result-box-with-copy">
+                                {{ uuidResult }}
+                                <button class="copy-btn" @click="copyToClipboard(uuidResult, $event)">📋 Copy</button>
+                            </div>
+                        </div>
+
+                        <!-- Password Generator -->
+                        <div v-show="currentGeneratorTab === 'password'" class="tool-card">
+                            <h3>🔑 Password Generator</h3>
+                            <div class="form-group">
+                                <label>Password Length:</label>
+                                <input v-model.number="passwordLength" type="number" min="4" max="128" value="16">
+                            </div>
+                            <div class="form-group">
+                                <label>Character Types:</label>
+                                <div class="checkbox-group">
+                                    <div class="checkbox-item">
+                                        <input v-model="passwordOptions.uppercase" type="checkbox" id="upper">
+                                        <label for="upper">Uppercase Letters</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input v-model="passwordOptions.lowercase" type="checkbox" id="lower">
+                                        <label for="lower">Lowercase Letters</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input v-model="passwordOptions.numbers" type="checkbox" id="numbers">
+                                        <label for="numbers">Numbers</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input v-model="passwordOptions.symbols" type="checkbox" id="symbols">
+                                        <label for="symbols">Symbols</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="button-group">
+                                <button @click="generatePassword">🔑 Generate Password</button>
+                                <button @click="clearPassword" class="danger">🗑️ Clear</button>
+                            </div>
+                            <div v-if="passwordResult" class="result-box result-box-with-copy">
+                                {{ passwordResult }}
+                                <button class="copy-btn" @click="copyToClipboard(passwordResult, $event)">📋
+                                    Copy</button>
+                            </div>
+                        </div>
+
+                        <!-- Random String Generator -->
+                        <div v-show="currentGeneratorTab === 'random'" class="tool-card">
+                            <h3>🎲 Random String Generator</h3>
+                            <div class="form-group">
+                                <label>String Length:</label>
+                                <input v-model.number="randomStringLength" type="number" min="1" max="1000" value="32">
+                            </div>
+                            <div class="form-group">
+                                <label>Character Set:</label>
+                                <select v-model="randomStringType">
+                                    <option value="alphanumeric">Alphanumeric</option>
+                                    <option value="alphabetic">Letters Only</option>
+                                    <option value="numeric">Numbers Only</option>
+                                    <option value="hex">Hexadecimal</option>
+                                </select>
+                            </div>
+                            <div class="button-group">
+                                <button @click="generateRandomString">🎲 Generate</button>
+                                <button @click="clearRandomString" class="danger">🗑️ Clear</button>
+                            </div>
+                            <div v-if="randomStringResult" class="result-box result-box-with-copy">
+                                {{ randomStringResult }}
+                                <button class="copy-btn" @click="copyToClipboard(randomStringResult, $event)">📋
+                                    Copy</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Diff Comparison -->
+                <div v-show="currentTab === 'diff'" class="diff-compare">
+                    <div class="page-header">
+                        <h2>🔍 Diff Comparison</h2>
+                        <p>Side-by-side text content difference comparison tool</p>
+                    </div>
+
+                    <div class="diff-container">
+                        <div class="form-group">
+                            <label>Original Text:</label>
+                            <textarea v-model="diffText1" placeholder="Enter original text" rows="15"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>New Text:</label>
+                            <textarea v-model="diffText2" placeholder="Enter comparison text" rows="15"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button @click="compareDiff" class="success">🔍 Compare</button>
+                        <button @click="clearDiff" class="secondary">🗑️ Clear</button>
+                        <button v-if="diffStats" @click="copyDiffResult($event)">📋 Copy Diff</button>
+                    </div>
+
+                    <div v-if="diffStats" class="diff-stats">
+                        <div class="stat-item">
+                            <span class="stat-added">+{{ diffStats.added }}</span>
+                            <span>Added</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-removed">-{{ diffStats.removed }}</span>
+                            <span>Removed</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-unchanged">{{ diffStats.unchanged }}</span>
+                            <span>Unchanged</span>
+                        </div>
+                    </div>
+
+                    <div v-if="diffStats" class="diff-view-toggle">
+                        <button class="view-toggle-btn" :class="{ active: diffViewMode === 'split' }"
+                            @click="diffViewMode = 'split'">Split</button>
+                        <button class="view-toggle-btn" :class="{ active: diffViewMode === 'unified' }"
+                            @click="diffViewMode = 'unified'">Unified</button>
+                    </div>
+
+                    <div v-if="diffStats">
+                        <!-- Split View -->
+                        <div v-if="diffViewMode === 'split'" class="diff-split-container">
+                            <div class="diff-split-side">
+                                <div class="diff-split-header">
+                                    <span class="diff-file-icon">📄</span>
+                                    <span>Original</span>
+                                </div>
+                                <div class="diff-split-content" ref="leftSplitContent" @scroll="onLeftScrollSync">
+                                    <div v-for="(line, index) in diffResult.leftLines" :key="'left-' + index"
+                                        class="diff-split-line" :class="line.type">
+                                        <span class="diff-split-line-number">{{ line.lineNumber || '' }}</span>
+                                        <span class="diff-split-line-content" v-html="line.content"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="diff-split-side">
+                                <div class="diff-split-header">
+                                    <span class="diff-file-icon">📄</span>
+                                    <span>New</span>
+                                </div>
+                                <div class="diff-split-content" ref="rightSplitContent" @scroll="onRightScrollSync">
+                                    <div v-for="(line, index) in diffResult.rightLines" :key="'right-' + index"
+                                        class="diff-split-line" :class="line.type">
+                                        <span class="diff-split-line-number">{{ line.lineNumber || '' }}</span>
+                                        <span class="diff-split-line-content" v-html="line.content"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Unified View -->
+                        <div v-else-if="diffViewMode === 'unified'" class="diff-viewer">
+                            <div class="diff-header">
+                                <div class="diff-file-header">
+                                    <span class="diff-file-icon">📄</span>
+                                    <span>Text Comparison</span>
+                                </div>
+                                <div>
+                                    <span v-if="diffStats">
+                                        <span class="stat-added">+{{ diffStats.added }}</span>
+                                        <span class="stat-removed" style="margin-left: 8px;">-{{ diffStats.removed }}</span>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="diff-content">
+                                <div class="diff-code">
+                                    <div v-for="(line, index) in diffResult.lines" :key="index" class="diff-line"
+                                        :class="line.type">
+                                        <span class="diff-line-number">{{ line.unifiedNumber || '' }}</span>
+                                        <span class="diff-line-content" v-html="line.content"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Format Conversion -->
+                <div v-show="currentTab === 'converter'" class="converter">
+                    <div class="page-header">
+                        <h2>🔄 Format Conversion</h2>
+                        <p>JSON ↔ YAML conversion tool</p>
+                    </div>
+
+                    <div class="encoder-tabs">
+                        <button v-for="tab in converterTabs" :key="tab.id" class="encoder-tab"
+                            :class="{ active: currentConverterTab === tab.id }" @click="currentConverterTab = tab.id">
+                            {{ tab.name }}
+                        </button>
+                    </div>
+
+                    <div class="tool-card">
+                        <div class="form-group">
+                            <label>Input Content:</label>
+                            <textarea v-model="converterInput" :placeholder="getConverterPlaceholder()"
+                                rows="10"></textarea>
+                        </div>
+                        <button @click="convertFormat" class="success">🔄 Convert</button>
+                        <button @click="clearConverter" class="secondary">🗑️ Clear</button>
+                        <div v-if="converterResult" class="result-box result-box-with-copy">
+                            {{ converterResult }}
+                            <button class="copy-btn" @click="copyToClipboard(converterResult, $event)">📋 Copy</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Regex Tester -->
+                <div v-show="currentTab === 'regex'" class="regex-tester">
+                    <div class="page-header">
+                        <h2>🔧 Regular Expression Tester</h2>
+                        <p>Test and debug regular expressions with real-time feedback</p>
+                    </div>
+
+                    <div class="tools-grid">
+                        <div class="tool-card">
+                            <h3>🎯 Regular Expression</h3>
+                            <div class="form-group">
+                                <label>Pattern:</label>
+                                <input type="text" v-model="regexInput" @input="debouncedTestRegex"
+                                    placeholder="Enter regex pattern..." />
+                            </div>
+
+                            <div class="form-group">
+                                <label>Flags:</label>
+                                <div class="regex-flags">
+                                    <label class="flag-checkbox">
+                                        <input type="checkbox" v-model="regexFlags.g" @change="debouncedTestRegex" />
+                                        <span>g</span> <small>Global</small>
+                                    </label>
+                                    <label class="flag-checkbox">
+                                        <input type="checkbox" v-model="regexFlags.i" @change="debouncedTestRegex" />
+                                        <span>i</span> <small>Ignore Case</small>
+                                    </label>
+                                    <label class="flag-checkbox">
+                                        <input type="checkbox" v-model="regexFlags.m" @change="debouncedTestRegex" />
+                                        <span>m</span> <small>Multiline</small>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="regex-info">
+                                <p><strong>Pattern:</strong>
+                                    <code>/{{ regexInput || 'empty' }}/{{ getRegexFlags() }}</code>
+                                </p>
+                                <p v-if="regexError && regexError.includes('Invalid regular expression')" class="error">
+                                    ❌ {{ regexError }}</p>
+                                <p v-else-if="regexError" class="warning">⚠️ {{ regexError }}</p>
+                                <p v-else-if="regexMatches.length > 0" class="success">✅ {{ regexMatches.length }}
+                                    match(es) found</p>
+                                <p v-else-if="regexInput && regexTestText" class="warning">⚠️ No matches found</p>
+                                <p v-if="regexTestText.length > 10000" class="performance-hint">💡 For better
+                                    performance, consider using shorter text</p>
+                            </div>
+
+                            <button @click="clearRegex" class="secondary">🗑️ Clear All</button>
+                        </div>
+
+                        <div class="tool-card">
+                            <h3>📝 Test Text</h3>
+                            <div class="form-group">
+                                <label>Input Text:</label>
+                                <textarea v-model="regexTestText" @input="debouncedTestRegex"
+                                    placeholder="Enter text to test against the regex..." rows="12"></textarea>
+                            </div>
+
+                            <div v-if="regexTestText && regexInput && !regexError" class="regex-preview">
+                                <label>Preview with Highlights:</label>
+                                <div class="regex-preview-text">
+                                    <div v-for="(line, index) in regexTestText.split('\n')" :key="index"
+                                        class="regex-line" v-html="highlightMatches(line, index)"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Matches Results -->
+                    <div v-if="regexMatches.length > 0" class="tool-card" style="margin-top: 20px;">
+                        <h3>🎯 Match Results</h3>
+                        <div class="regex-matches">
+                            <div v-for="(match, index) in regexMatches" :key="index" class="match-item">
+                                <div class="match-header">
+                                    <span class="match-index">Match {{ index + 1 }}</span>
+                                    <span class="match-position">Line {{ match.lineIndex }}, Position {{ match.index
+                                        }}</span>
+                                </div>
+                                <div class="match-content">
+                                    <strong>Matched:</strong> <code class="match-text">{{ match.match }}</code>
+                                </div>
+                                <div v-if="match.groups.length > 0" class="match-groups">
+                                    <strong>Groups:</strong>
+                                    <span v-for="(group, groupIndex) in match.groups" :key="groupIndex"
+                                        class="group-item">
+                                        Group {{ groupIndex + 1 }}: <code>{{ group || '(empty)' }}</code>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Template Library -->
+                    <div class="tool-card" style="margin-top: 20px;">
+                        <h3>📚 Common Regex Templates</h3>
+                        <div class="regex-templates">
+                            <div v-for="(templates, category) in regexTemplates" :key="category"
+                                class="template-category">
+                                <h4>{{ category }}</h4>
+                                <div class="template-list">
+                                    <button v-for="template in templates" :key="template.name" class="template-btn"
+                                        :class="{ active: selectedTemplate === template }"
+                                        @click="applyTemplate(template)">
+                                        {{ template.name }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
 </body>
 
 </html>
